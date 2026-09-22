@@ -1,0 +1,31 @@
+/* Keeps the supplied SVG legible and optically centred in the club header. */
+.logo-frame {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.logo-area .hornbill-icon {
+  display: block;
+  width: 122%;
+  height: 122%;
+  max-width: none;
+  object-fit: cover;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  transform: translate(-2%, -2%);
+}
+
+@media (max-width: 600px) {
+  .logo-frame {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+}

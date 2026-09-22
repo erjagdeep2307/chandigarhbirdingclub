@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FFF8EE"/>
+    </linearGradient>
+    <linearGradient id="casqueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="60%" stop-color="#FFA500"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3C4"/>
+      <stop offset="50%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6B7280"/>
+      <stop offset="60%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#1F2937"/>
+    </linearGradient>
+    <linearGradient id="breastGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E5E7EB"/>
+      <stop offset="70%" stop-color="#9CA3AF"/>
+      <stop offset="100%" stop-color="#4B5563"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle Frame -->
+  <circle cx="50" cy="50" r="48" fill="url(#bgGrad)" stroke="#FFD700" stroke-width="2.5"/>
+
+  <!-- Subtle Green Foliage Branch Accents in Background -->
+  <path d="M 12 76 Q 30 70 54 75 Q 75 80 92 72" fill="none" stroke="#84532B" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M 28 72 Q 22 62 18 64 Q 22 72 28 72 Z" fill="#1B7A4A"/>
+  <path d="M 75 75 Q 82 66 87 68 Q 82 76 75 75 Z" fill="#1B7A4A"/>
+
+  <!-- Hornbill Body & Back -->
+  <path d="M 40 40 C 35 48 34 65 37 78 C 39 82 46 84 50 82 C 55 80 58 75 60 68 C 64 56 61 46 54 41 Z" fill="url(#bodyGrad)"/>
+  
+  <!-- Hornbill Tail Feathers -->
+  <path d="M 42 78 L 38 94 L 46 95 L 48 79 Z" fill="#1F2937"/>
+  <path d="M 44 91 L 38 94 L 46 95 Z" fill="#F3F4F6"/>
+
+  <!-- Breast / Front Throat (Silvery Grey) -->
+  <path d="M 48 40 C 53 45 56 55 54 68 C 50 72 45 72 42 66 C 40 58 41 47 48 40 Z" fill="url(#breastGrad)"/>
+
+  <!-- Hornbill Head -->
+  <circle cx="48" cy="34" r="14" fill="url(#bodyGrad)"/>
+
+  <!-- Hornbill Casque (Distinctive Ridge on Upper Beak) -->
+  <path d="M 44 23 C 54 22 67 27 72 32 C 65 34 54 33 46 31 Z" fill="url(#casqueGrad)"/>
+  <path d="M 48 24 C 56 24 64 28 68 31 C 60 31 52 30 48 24 Z" fill="#B45309" opacity="0.4"/>
+
+  <!-- Giant Curved Beak -->
+  <path d="M 52 29 C 64 30 76 35 83 44 C 76 45 68 44 54 39 C 50 37 47 35 46 33 Z" fill="url(#beakGrad)"/>
+  <!-- Lower Mandible -->
+  <path d="M 51 37 C 62 41 71 44 79 46 C 71 48 62 46 48 41 Z" fill="#D97706"/>
+
+  <!-- Eye Patch (Red ring around eye of male/female Indian Grey Hornbill) -->
+  <circle cx="44" cy="32" r="4.2" fill="#D63B6A"/>
+  <!-- Eye -->
+  <circle cx="44" cy="32" r="2.8" fill="#1A1A1A"/>
+  <circle cx="43" cy="31" r="1" fill="#FFFFFF"/>
+
+  <!-- Wing Fold -->
+  <path d="M 39 46 Q 34 60 41 73 Q 48 64 45 50 Z" fill="#111827"/>
+  <path d="M 37 53 Q 32 62 38 71" fill="none" stroke="#9CA3AF" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

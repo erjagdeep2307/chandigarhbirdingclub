@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --saffron: #FF6B00;
+  --saffron-light: #FFF0E0;
+  --saffron-mid: #FFB347;
+  --jade: #1B7A4A;
+  --jade-light: #E0F5EB;
+  --peacock: #0057A8;
+  --peacock-light: #E0EEFF;
+  --rose: #D63B6A;
+  --rose-light: #FDEAF0;
+  --hornbill-yellow: #FFD700;
+  --hornbill-black: #1A1A1A;
+  --cream: #FFFBF2;
+  --text: #1C1C1C;
+  --text-muted: #6B6B6B;
+  --border: #E8E0D0;
+  --radius: 14px;
+  color-scheme: light;
+}
+
+.dark {
+  --cream: #0c120f;
+  --text: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --border: #26362C;
+  --saffron-light: rgba(255, 107, 0, 0.16);
+  --jade-light: rgba(27, 122, 74, 0.22);
+  --peacock-light: rgba(0, 87, 168, 0.22);
+  --rose-light: rgba(214, 59, 106, 0.22);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  background-color: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ── AVATAR GRADIENTS ── */
+.av-1 { background: linear-gradient(135deg, #FF6B00, #FFB347); }
+.av-2 { background: linear-gradient(135deg, #1B7A4A, #2ECC71); }
+.av-3 { background: linear-gradient(135deg, #0057A8, #56A5F5); }
+.av-4 { background: linear-gradient(135deg, #D63B6A, #F890B0); }
+.av-5 { background: linear-gradient(135deg, #7B2D8B, #C97ED9); }
+.av-6 { background: linear-gradient(135deg, #B07D00, #F7C948); }
+.av-7 { background: linear-gradient(135deg, #C0392B, #E57373); }
+.av-8 { background: linear-gradient(135deg, #1A5276, #5DADE2); }
+
+/* ── ANIMATIONS ── */
+@keyframes popIn {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  60% { transform: translateX(6px); }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shake {
+  animation: shake 0.35s ease;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* ── LOGO FRAME ── */
+.logo-frame {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hornbill-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 600px) {
+  .logo-frame {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+}

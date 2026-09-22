@@ -1,0 +1,44 @@
+-- Chandigarh Birding Club PostgreSQL Schema for Neon
+
+CREATE TABLE IF NOT EXISTS walks (
+  id BIGSERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  datetime TIMESTAMPTZ NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  duration VARCHAR(100) DEFAULT 'TBD',
+  description TEXT DEFAULT '',
+  upcoming BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS past_walks (
+  id BIGSERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  date VARCHAR(100) NOT NULL,
+  participants VARCHAR(100) DEFAULT '—',
+  species VARCHAR(100) DEFAULT '—',
+  emoji VARCHAR(10) DEFAULT '🌿',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS birds (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  latin VARCHAR(255) DEFAULT '',
+  location VARCHAR(255) NOT NULL,
+  photo TEXT DEFAULT '',
+  emoji VARCHAR(10) DEFAULT '🐦',
+  spotter VARCHAR(100) DEFAULT 'Anonymous',
+  week VARCHAR(100) DEFAULT 'This week',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS members (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  role VARCHAR(100) DEFAULT 'Member',
+  year INT DEFAULT 2024,
+  specialty VARCHAR(255) DEFAULT '',
+  avatar_class VARCHAR(50) DEFAULT 'av-1',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
