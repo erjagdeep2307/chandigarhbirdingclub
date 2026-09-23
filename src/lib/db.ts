@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { Walk, PastWalk, BirdSighting, Member } from './types';
+import { hashPassword, verifyPassword } from './auth';
 
 const isNeonConfigured = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '');
 
@@ -133,11 +134,34 @@ let mockMembers: Member[] = [
   }
 ];
 
+const fallbackAdminUsername = process.env.ADMIN_USERNAME || 'admin';
+const fallbackAdminPassword = process.env.ADMIN_PASSWORD || 'papakipari123';
+let mockUsers = [
+  {
+    id: 1,
+    username: fallbackAdminUsername,
+    password_hash: hashPassword(fallbackAdminPassword),
+    role: 'admin',
+    is_active: true,
+  },
+];
+
 // Ensure tables exist in Neon
 let tablesInitialized = false;
 export async function ensureTablesExist() {
   if (!sql || tablesInitialized) return;
   try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id BIGSERIAL PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        role VARCHAR(50) DEFAULT 'admin',
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
     await sql`
       CREATE TABLE IF NOT EXISTS walks (
         id BIGSERIAL PRIMARY KEY,
@@ -185,6 +209,15 @@ export async function ensureTablesExist() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
+
+    const usersCount = await sql`SELECT count(*) as count FROM users`;
+    if (parseInt(usersCount[0].count, 10) === 0) {
+      await sql`
+        INSERT INTO users (username, password_hash, role)
+        VALUES (${fallbackAdminUsername}, ${hashPassword(fallbackAdminPassword)}, 'admin')
+        ON CONFLICT (username) DO NOTHING
+      `;
+    }
 
     // Seed initial data if tables are empty
     const walksCount = await sql`SELECT count(*) as count FROM walks`;
@@ -234,6 +267,38 @@ export async function ensureTablesExist() {
 }
 
 // ── WALKS CRUD ──
+export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
+  const normalizedUsername = username.trim();
+  if (!normalizedUsername || !password) return false;
+
+  if (sql) {
+    await ensureTablesExist();
+    const rows = await sql`
+      SELECT password_hash, role, is_active
+      FROM users
+      WHERE username = ${normalizedUsername}
+      LIMIT 1
+    `;
+
+    if (rows.length === 0 || rows[0].role !== 'admin' || !rows[0].is_active) {
+      return false;
+    }
+
+    return verifyPassword(password, rows[0].password_hash);
+  }
+
+  const user = mockUsers.find(
+    (u) => u.username.toLowerCase() === normalizedUsername.toLowerCase()
+  );
+
+  return Boolean(
+    user &&
+      user.role === 'admin' &&
+      user.is_active &&
+      verifyPassword(password, user.password_hash)
+  );
+}
+
 export async function getUpcomingWalks(): Promise<Walk[]> {
   if (sql) {
     await ensureTablesExist();

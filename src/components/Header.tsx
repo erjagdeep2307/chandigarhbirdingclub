@@ -146,7 +146,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-hornbill-yellow text-hornbill-black hover:bg-amber-400 active:scale-95 transition-all cursor-pointer shadow-md font-bold text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-white"
             >
               <Menu className="w-5 h-5 text-neutral-900" />
-              <span>Menu</span>
+              {/* <span>Menu</span> */}
             </button>
           </div>
         </div>

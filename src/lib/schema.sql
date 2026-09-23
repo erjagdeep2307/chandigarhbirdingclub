@@ -1,5 +1,15 @@
 -- Chandigarh Birding Club PostgreSQL Schema for Neon
 
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(50) DEFAULT 'admin',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS walks (
   id BIGSERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,

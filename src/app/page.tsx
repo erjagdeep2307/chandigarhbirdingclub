@@ -10,6 +10,7 @@ import BirdGalleryTab from '@/components/tabs/BirdGalleryTab';
 import MembersTab from '@/components/tabs/MembersTab';
 import AboutTab from '@/components/tabs/AboutTab';
 import Footer from '@/components/Footer';
+import { useToast } from '@/components/ToastContext';
 import { Walk, PastWalk, BirdSighting, Member } from '@/lib/types';
 import {
   initialMockWalks,
@@ -19,6 +20,7 @@ import {
 } from '@/lib/initialData';
 
 export default function Home() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('walks');
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -82,8 +84,10 @@ export default function Home() {
       await fetch('/api/auth/logout', { method: 'POST' });
       setIsAdmin(false);
       fetchData();
+      showToast('Logged out of admin mode.', 'success');
     } catch (err) {
       console.error('Error logging out:', err);
+      showToast('Could not log out. Please try again.', 'error');
     }
   };
 
@@ -96,6 +100,7 @@ export default function Home() {
         onSuccess={() => {
           setIsAdmin(true);
           fetchData();
+          showToast('Admin mode unlocked.', 'success');
         }}
       />
 

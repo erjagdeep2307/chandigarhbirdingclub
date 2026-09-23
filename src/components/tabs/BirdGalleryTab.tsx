@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { BirdSighting } from '@/lib/types';
+import { useToast } from '@/components/ToastContext';
 
 interface BirdGalleryTabProps {
   birds: BirdSighting[];
@@ -15,6 +16,8 @@ export default function BirdGalleryTab({
   isAdmin,
   onRefresh,
 }: BirdGalleryTabProps) {
+  const { showToast } = useToast();
+
   const [name, setName] = useState('');
   const [latin, setLatin] = useState('');
   const [location, setLocation] = useState('');
@@ -28,7 +31,7 @@ export default function BirdGalleryTab({
   const handleAddSighting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !location.trim()) {
-      alert('Please fill in Bird Name and Location.');
+      showToast('Please fill in Bird Name and Location.', 'error');
       return;
     }
 
@@ -57,12 +60,13 @@ export default function BirdGalleryTab({
         setSpotter('');
         setWeek('This week');
         onRefresh();
+        showToast('Bird sighting added.', 'success');
       } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to add bird sighting.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to add bird sighting.', 'error');
       }
     } catch {
-      alert('Connection error while adding sighting.');
+      showToast('Connection error while adding sighting.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -75,11 +79,13 @@ export default function BirdGalleryTab({
       const res = await fetch(`/api/birds/${id}`, { method: 'DELETE' });
       if (res.ok) {
         onRefresh();
+        showToast('Bird sighting removed.', 'success');
       } else {
-        alert('Failed to remove bird sighting.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to remove bird sighting.', 'error');
       }
     } catch {
-      alert('Connection error while removing sighting.');
+      showToast('Connection error while removing sighting.', 'error');
     }
   };
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Walk, PastWalk } from '@/lib/types';
+import { useToast } from '@/components/ToastContext';
 
 interface NatureWalksTabProps {
   walks: Walk[];
@@ -16,6 +17,8 @@ export default function NatureWalksTab({
   isAdmin,
   onRefresh,
 }: NatureWalksTabProps) {
+  const { showToast } = useToast();
+
   // New walk form state
   const [walkTitle, setWalkTitle] = useState('');
   const [walkDatetime, setWalkDatetime] = useState('');
@@ -55,7 +58,7 @@ export default function NatureWalksTab({
   const handleAddWalk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!walkTitle.trim() || !walkDatetime || !walkLocation.trim()) {
-      alert('Please fill in Title, Date & Time, and Meeting Point.');
+      showToast('Please fill in Title, Date & Time, and Meeting Point.', 'error');
       return;
     }
 
@@ -80,12 +83,13 @@ export default function NatureWalksTab({
         setWalkDuration('');
         setWalkDesc('');
         onRefresh();
+        showToast('Walk announcement posted.', 'success');
       } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to post walk announcement.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to post walk announcement.', 'error');
       }
     } catch {
-      alert('Connection error while adding walk.');
+      showToast('Connection error while adding walk.', 'error');
     } finally {
       setIsSubmittingWalk(false);
     }
@@ -98,11 +102,13 @@ export default function NatureWalksTab({
       const res = await fetch(`/api/walks/${id}`, { method: 'PATCH' });
       if (res.ok) {
         onRefresh();
+        showToast('Walk moved to Past Walks.', 'success');
       } else {
-        alert('Failed to update walk status.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to update walk status.', 'error');
       }
     } catch {
-      alert('Connection error while moving walk.');
+      showToast('Connection error while moving walk.', 'error');
     }
   };
 
@@ -110,7 +116,7 @@ export default function NatureWalksTab({
   const handleAddPastWalk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pastTitle.trim() || !pastDate.trim()) {
-      alert('Please fill in Title and Date.');
+      showToast('Please fill in Title and Date.', 'error');
       return;
     }
 
@@ -135,11 +141,13 @@ export default function NatureWalksTab({
         setPastSpecies('');
         setPastEmoji('🌿');
         onRefresh();
+        showToast('Past walk record added.', 'success');
       } else {
-        alert('Failed to add past walk record.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to add past walk record.', 'error');
       }
     } catch {
-      alert('Connection error while adding past walk.');
+      showToast('Connection error while adding past walk.', 'error');
     } finally {
       setIsSubmittingPast(false);
     }
@@ -152,11 +160,13 @@ export default function NatureWalksTab({
       const res = await fetch(`/api/walks/past/${id}`, { method: 'DELETE' });
       if (res.ok) {
         onRefresh();
+        showToast('Past walk deleted.', 'success');
       } else {
-        alert('Failed to delete past walk.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to delete past walk.', 'error');
       }
     } catch {
-      alert('Connection error while deleting past walk.');
+      showToast('Connection error while deleting past walk.', 'error');
     }
   };
 
@@ -308,8 +318,9 @@ export default function NatureWalksTab({
                 ) : (
                   <button
                     onClick={() =>
-                      alert(
-                        'Thank you! Contact us at chandigarhbirdingclub2026@gmail.com to register for this walk.'
+                      showToast(
+                        'Thank you! Contact us at chandigarhbirdingclub2026@gmail.com to register for this walk.',
+                        'info'
                       )
                     }
                     className="w-full bg-saffron hover:brightness-95 text-white py-2 px-4 rounded-lg text-[13px] font-semibold transition-all cursor-pointer shadow-sm"

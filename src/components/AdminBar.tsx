@@ -1,5 +1,6 @@
 'use client';
 
+import { LogOut } from 'lucide-react';
 import React from 'react';
 
 interface AdminBarProps {
@@ -45,8 +46,10 @@ export default function AdminBar({
             <button
               onClick={onLogout}
               className="text-neutral-400 border border-neutral-700 hover:border-rose hover:text-rose px-3.5 py-1.5 rounded-md font-semibold transition-all hover:bg-rose/10 cursor-pointer"
+              title='logout'
             >
-              🔒 Log out of admin
+              {/* 🔒 Logout */}
+              <LogOut />
             </button>
           ) : (
             <button

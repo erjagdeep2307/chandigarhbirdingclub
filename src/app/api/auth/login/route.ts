@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdminPassword, createAdminToken, AUTH_COOKIE_NAME } from '@/lib/auth';
+import { createAdminToken, AUTH_COOKIE_NAME } from '@/lib/auth';
+import { verifyAdminCredentials } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { password } = body;
+    const { username, password } = body;
 
-    if (!password || !verifyAdminPassword(password)) {
+    if (!username || !password || !(await verifyAdminCredentials(username, password))) {
       return NextResponse.json(
-        { error: 'Incorrect admin password' },
+        { error: 'Incorrect username or password' },
         { status: 401 }
       );
     }
 
-    const token = createAdminToken();
+    const token = createAdminToken(username.trim());
     const response = NextResponse.json({ success: true, isAdmin: true });
 
     // Set secure HTTP-only cookie

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Member } from '@/lib/types';
+import { useToast } from '@/components/ToastContext';
 
 interface MembersTabProps {
   members: Member[];
@@ -14,6 +15,8 @@ export default function MembersTab({
   isAdmin,
   onRefresh,
 }: MembersTabProps) {
+  const { showToast } = useToast();
+
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -35,7 +38,7 @@ export default function MembersTab({
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Please enter the member name.');
+      showToast('Please enter the member name.', 'error');
       return;
     }
 
@@ -58,12 +61,13 @@ export default function MembersTab({
         setYear(String(new Date().getFullYear()));
         setSpecialty('');
         onRefresh();
+        showToast('Member added.', 'success');
       } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to add member.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to add member.', 'error');
       }
     } catch {
-      alert('Connection error while adding member.');
+      showToast('Connection error while adding member.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -76,11 +80,13 @@ export default function MembersTab({
       const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
       if (res.ok) {
         onRefresh();
+        showToast('Member removed.', 'success');
       } else {
-        alert('Failed to remove member.');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to remove member.', 'error');
       }
     } catch {
-      alert('Connection error while removing member.');
+      showToast('Connection error while removing member.', 'error');
     }
   };
 

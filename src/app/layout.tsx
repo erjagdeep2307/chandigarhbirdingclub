@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
 import { ThemeProvider } from '@/components/ThemeContext';
+import { ToastProvider } from '@/components/ToastContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -57,7 +58,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen">
         <ThemeProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

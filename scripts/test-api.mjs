@@ -47,21 +47,21 @@ async function runTests() {
   if (unauthPost.status !== 401) throw new Error('Unauthorized POST was not blocked');
 
   // Test 6: Invalid admin login
-  console.log('6. Testing invalid login password...');
+  console.log('6. Testing invalid login credentials...');
   const badLogin = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: 'wrongpassword' }),
+    body: JSON.stringify({ username: 'admin', password: 'wrongpassword' }),
   });
   console.log(`   Status: ${badLogin.status} (Expected 401: ${badLogin.status === 401})`);
-  if (badLogin.status !== 401) throw new Error('Invalid password was accepted');
+  if (badLogin.status !== 401) throw new Error('Invalid credentials were accepted');
 
   // Test 7: Valid admin login
-  console.log('7. Testing valid login password (papakipari123)...');
+  console.log('7. Testing valid login credentials (admin / papakipari123)...');
   const goodLogin = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: 'papakipari123' }),
+    body: JSON.stringify({ username: 'admin', password: 'papakipari123' }),
   });
   console.log(`   Status: ${goodLogin.status} (Expected 200: ${goodLogin.status === 200})`);
   if (goodLogin.status !== 200) throw new Error('Valid login failed');
