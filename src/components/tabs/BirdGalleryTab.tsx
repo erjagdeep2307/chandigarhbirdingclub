@@ -236,7 +236,7 @@ export default function BirdGalleryTab({
               key={b.id}
               className="bg-white dark:bg-surface-dark rounded-club overflow-hidden border border-borderLight dark:border-borderDark transition-all duration-200 hover:-translate-y-1 hover:shadow-lg flex flex-col justify-between"
             >
-              <div>
+              {/* <div> */}
                 <div className="w-full h-[180px] bg-gradient-to-br from-[#e8f5e9] to-[#e3f2fd] dark:from-[#0d2318] dark:to-[#0a1e34] flex items-center justify-center relative overflow-hidden">
                   {b.photo ? (
                     <Image
@@ -269,17 +269,18 @@ export default function BirdGalleryTab({
                     {b.latin || ''}
                   </div>
                 </div>
-              </div>
+              {/* </div> */}
 
-              <div className="px-3.5 pb-3.5 flex items-center justify-between text-[11px]">
+              <div className="px-3.5 pb-3.5 flex flex-col items-center justify-between text-[11px]">
                 <span className="text-jade dark:text-emerald-400 bg-jade-light dark:bg-jade-darkLight px-2 py-0.5 rounded-full font-medium">
                   📍 {b.location}
                 </span>
                 <span className="text-neutral-500 dark:text-neutral-400">
-                  by {b.spotter}
+                  By {b.spotter}
                 </span>
               </div>
             </div>
+
           ))}
         </div>
       )}
