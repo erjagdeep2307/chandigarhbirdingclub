@@ -134,18 +134,6 @@ let mockMembers: Member[] = [
   }
 ];
 
-const fallbackAdminUsername = process.env.ADMIN_USERNAME || 'admin';
-const fallbackAdminPassword = process.env.ADMIN_PASSWORD || 'papakipari123';
-let mockUsers = [
-  {
-    id: 1,
-    username: fallbackAdminUsername,
-    password_hash: hashPassword(fallbackAdminPassword),
-    role: 'admin',
-    is_active: true,
-  },
-];
-
 // Ensure tables exist in Neon
 let tablesInitialized = false;
 export async function ensureTablesExist() {
@@ -209,15 +197,6 @@ export async function ensureTablesExist() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
-
-    const usersCount = await sql`SELECT count(*) as count FROM users`;
-    if (parseInt(usersCount[0].count, 10) === 0) {
-      await sql`
-        INSERT INTO users (username, password_hash, role)
-        VALUES (${fallbackAdminUsername}, ${hashPassword(fallbackAdminPassword)}, 'admin')
-        ON CONFLICT (username) DO NOTHING
-      `;
-    }
 
     // Seed initial data if tables are empty
     const walksCount = await sql`SELECT count(*) as count FROM walks`;
@@ -287,16 +266,7 @@ export async function verifyAdminCredentials(username: string, password: string)
     return verifyPassword(password, rows[0].password_hash);
   }
 
-  const user = mockUsers.find(
-    (u) => u.username.toLowerCase() === normalizedUsername.toLowerCase()
-  );
-
-  return Boolean(
-    user &&
-      user.role === 'admin' &&
-      user.is_active &&
-      verifyPassword(password, user.password_hash)
-  );
+  return false;
 }
 
 export async function getUpcomingWalks(): Promise<Walk[]> {

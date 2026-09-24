@@ -57,11 +57,11 @@ async function runTests() {
   if (badLogin.status !== 401) throw new Error('Invalid credentials were accepted');
 
   // Test 7: Valid admin login
-  console.log('7. Testing valid login credentials (admin / papakipari123)...');
+  console.log('7. Testing valid login credentials from the configured database user...');
   const goodLogin = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'papakipari123' }),
+    body: JSON.stringify({ username: process.env.TEST_ADMIN_USERNAME, password: process.env.TEST_ADMIN_PASSWORD }),
   });
   console.log(`   Status: ${goodLogin.status} (Expected 200: ${goodLogin.status === 200})`);
   if (goodLogin.status !== 200) throw new Error('Valid login failed');

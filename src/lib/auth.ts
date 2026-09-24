@@ -2,8 +2,10 @@ import jwt from 'jsonwebtoken';
 import { pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chandigarh-birding-club-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
 export const AUTH_COOKIE_NAME = 'cbc_admin_session';
+export const CSRF_COOKIE_NAME = 'cbc_csrf_token';
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
 const PASSWORD_HASH_PREFIX = 'pbkdf2_sha256';
 const PASSWORD_HASH_ITERATIONS = 100000;
 const PASSWORD_HASH_KEYLEN = 64;
@@ -51,10 +53,12 @@ export function verifyPassword(password: string, storedHash: string): boolean {
 }
 
 export function createAdminToken(username: string): string {
-  return jwt.sign({ role: 'admin', username }, JWT_SECRET, { expiresIn: '7d' });
+  if (!JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+  return jwt.sign({ role: 'admin', username }, JWT_SECRET, { expiresIn: SESSION_MAX_AGE_SECONDS });
 }
 
 export function verifyAdminToken(token: string): boolean {
+  if (!JWT_SECRET) return false;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { role: string };
     return decoded && decoded.role === 'admin';

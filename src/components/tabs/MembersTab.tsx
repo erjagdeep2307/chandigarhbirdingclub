@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Member } from '@/lib/types';
 import { useToast } from '@/components/ToastContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface MembersTabProps {
   members: Member[];
@@ -46,7 +47,7 @@ export default function MembersTab({
     try {
       const res = await fetch('/api/members', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           name: name.trim(),
           role: role.trim() || 'Member',
@@ -77,7 +78,7 @@ export default function MembersTab({
   const handleDeleteMember = async (id: number | string) => {
     if (!confirm('Remove this member?')) return;
     try {
-      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
         showToast('Member removed.', 'success');

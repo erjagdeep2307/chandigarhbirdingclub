@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminToken, AUTH_COOKIE_NAME } from '@/lib/auth';
+import { createAdminToken, AUTH_COOKIE_NAME, CSRF_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/auth';
+import { randomBytes } from 'crypto';
 import { verifyAdminCredentials } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,17 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+
+    response.cookies.set({
+      name: CSRF_COOKIE_NAME,
+      value: randomBytes(32).toString('hex'),
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
 
     return response;

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { BirdSighting } from '@/lib/types';
 import { useToast } from '@/components/ToastContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface BirdGalleryTabProps {
   birds: BirdSighting[];
@@ -39,7 +40,7 @@ export default function BirdGalleryTab({
     try {
       const res = await fetch('/api/birds', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           name: name.trim(),
           latin: latin.trim(),
@@ -76,7 +77,7 @@ export default function BirdGalleryTab({
   const handleDeleteBird = async (id: number | string) => {
     if (!confirm('Remove this sighting?')) return;
     try {
-      const res = await fetch(`/api/birds/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/birds/${id}`, { method: 'DELETE', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
         showToast('Bird sighting removed.', 'success');

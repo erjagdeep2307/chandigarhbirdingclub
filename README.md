@@ -41,7 +41,7 @@ A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark 
   - Setup script: `npm run db:setup` runs database table verification.
 
 - **🔐 Admin Authentication & API Layer**:
-  - Secure password authentication (default: `papakipari123`, customizable in `.env.local` via `ADMIN_PASSWORD`).
+  - Secure password authentication using administrator records stored in the database.
   - Protected API endpoints returning HTTP 401 for unauthorized mutations:
     - `POST /api/walks` — Post new walk announcement.
     - `PATCH /api/walks/[id]` — Mark walk as done / move to past walks.
@@ -72,8 +72,8 @@ Create or edit `.env.local`:
 # Neon PostgreSQL Connection String
 DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-sample-123.us-east-2.aws.neon.tech/neondb?sslmode=require
 
-# Admin Dashboard Password (optional, default: papakipari123)
-ADMIN_PASSWORD=papakipari123
+# Private setup key for generating a password hash through the setup API
+PASSWORD_HASH_API_KEY=generate-a-long-random-setup-key
 
 # JWT Secret for Session Verification
 JWT_SECRET=your-secure-secret-key-here

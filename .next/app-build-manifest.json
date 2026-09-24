@@ -16,11 +16,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/check/route.js"
     ],
-    "/api/walks/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/walks/route.js"
-    ],
     "/api/walks/past/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -36,10 +31,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/members/route.js"
     ],
+    "/api/walks/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/walks/route.js"
+    ],
+    "/api/auth/logout/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/logout/route.js"
+    ],
     "/api/auth/login/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/login/route.js"
+    ],
+    "/api/walks/past/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/walks/past/[id]/route.js"
     ]
   }
 }

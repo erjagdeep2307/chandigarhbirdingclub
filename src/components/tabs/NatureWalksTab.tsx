@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Walk, PastWalk } from '@/lib/types';
 import { useToast } from '@/components/ToastContext';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface NatureWalksTabProps {
   walks: Walk[];
@@ -66,7 +67,7 @@ export default function NatureWalksTab({
     try {
       const res = await fetch('/api/walks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           title: walkTitle.trim(),
           datetime: walkDatetime,
@@ -99,7 +100,7 @@ export default function NatureWalksTab({
   const handleMoveToPast = async (id: number | string) => {
     if (!confirm('Move this walk to Past Walks?')) return;
     try {
-      const res = await fetch(`/api/walks/${id}`, { method: 'PATCH' });
+      const res = await fetch(`/api/walks/${id}`, { method: 'PATCH', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
         showToast('Walk moved to Past Walks.', 'success');
@@ -124,7 +125,7 @@ export default function NatureWalksTab({
     try {
       const res = await fetch('/api/walks/past', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({
           title: pastTitle.trim(),
           date: pastDate.trim(),
@@ -157,7 +158,7 @@ export default function NatureWalksTab({
   const handleDeletePastWalk = async (id: number | string) => {
     if (!confirm('Delete this past walk permanently?')) return;
     try {
-      const res = await fetch(`/api/walks/past/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/walks/past/${id}`, { method: 'DELETE', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
         showToast('Past walk deleted.', 'success');

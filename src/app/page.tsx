@@ -12,6 +12,7 @@ import AboutTab from '@/components/tabs/AboutTab';
 import Footer from '@/components/Footer';
 import { useToast } from '@/components/ToastContext';
 import { Walk, PastWalk, BirdSighting, Member } from '@/lib/types';
+import { csrfHeaders } from '@/lib/csrf';
 import {
   initialMockWalks,
   initialMockPastWalks,
@@ -81,7 +82,7 @@ export default function Home() {
   // Handle Logout
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', headers: csrfHeaders() });
       setIsAdmin(false);
       fetchData();
       showToast('Logged out of admin mode.', 'success');
