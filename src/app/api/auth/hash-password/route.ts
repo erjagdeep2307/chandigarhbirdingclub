@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     return NextResponse.json({ password_hash: hashPassword(password) });
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
