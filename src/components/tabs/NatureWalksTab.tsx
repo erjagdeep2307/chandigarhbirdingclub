@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Bird, Calendar, Clock, Leaf, MapPin, Users, X } from 'lucide-react';
 import { Walk, PastWalk } from '@/lib/types';
-import { useToast } from '@/components/ToastContext';
+import { toast } from 'sonner';
 import { csrfHeaders } from '@/lib/csrf';
 
 interface NatureWalksTabProps {
@@ -18,8 +19,6 @@ export default function NatureWalksTab({
   isAdmin,
   onRefresh,
 }: NatureWalksTabProps) {
-  const { showToast } = useToast();
-
   // New walk form state
   const [walkTitle, setWalkTitle] = useState('');
   const [walkDatetime, setWalkDatetime] = useState('');
@@ -35,6 +34,22 @@ export default function NatureWalksTab({
   const [pastSpecies, setPastSpecies] = useState('');
   const [pastEmoji, setPastEmoji] = useState('🌿');
   const [isSubmittingPast, setIsSubmittingPast] = useState(false);
+  const [selectedWalk, setSelectedWalk] = useState<Walk | null>(null);
+  const [selectedPastWalk, setSelectedPastWalk] = useState<PastWalk | null>(null);
+
+  useEffect(() => {
+    if (!selectedWalk && !selectedPastWalk) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedWalk(null);
+        setSelectedPastWalk(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPastWalk, selectedWalk]);
 
   // Format date helper
   const formatDatetime = (str: string) => {
@@ -59,7 +74,7 @@ export default function NatureWalksTab({
   const handleAddWalk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!walkTitle.trim() || !walkDatetime || !walkLocation.trim()) {
-      showToast('Please fill in Title, Date & Time, and Meeting Point.', 'error');
+      toast.error('Please fill in Title, Date & Time, and Meeting Point.');
       return;
     }
 
@@ -84,13 +99,13 @@ export default function NatureWalksTab({
         setWalkDuration('');
         setWalkDesc('');
         onRefresh();
-        showToast('Walk announcement posted.', 'success');
+        toast.success('Walk announcement posted.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to post walk announcement.', 'error');
+        toast.error(err.error || 'Failed to post walk announcement.');
       }
     } catch {
-      showToast('Connection error while adding walk.', 'error');
+      toast.error('Connection error while adding walk.');
     } finally {
       setIsSubmittingWalk(false);
     }
@@ -103,13 +118,13 @@ export default function NatureWalksTab({
       const res = await fetch(`/api/walks/${id}`, { method: 'PATCH', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
-        showToast('Walk moved to Past Walks.', 'success');
+        toast.success('Walk moved to Past Walks.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to update walk status.', 'error');
+        toast.error(err.error || 'Failed to update walk status.');
       }
     } catch {
-      showToast('Connection error while moving walk.', 'error');
+      toast.error('Connection error while moving walk.');
     }
   };
 
@@ -117,7 +132,7 @@ export default function NatureWalksTab({
   const handleAddPastWalk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pastTitle.trim() || !pastDate.trim()) {
-      showToast('Please fill in Title and Date.', 'error');
+      toast.error('Please fill in Title and Date.');
       return;
     }
 
@@ -142,13 +157,13 @@ export default function NatureWalksTab({
         setPastSpecies('');
         setPastEmoji('🌿');
         onRefresh();
-        showToast('Past walk record added.', 'success');
+        toast.success('Past walk record added.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to add past walk record.', 'error');
+        toast.error(err.error || 'Failed to add past walk record.');
       }
     } catch {
-      showToast('Connection error while adding past walk.', 'error');
+      toast.error('Connection error while adding past walk.');
     } finally {
       setIsSubmittingPast(false);
     }
@@ -161,13 +176,13 @@ export default function NatureWalksTab({
       const res = await fetch(`/api/walks/past/${id}`, { method: 'DELETE', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
-        showToast('Past walk deleted.', 'success');
+        toast.success('Past walk deleted.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to delete past walk.', 'error');
+        toast.error(err.error || 'Failed to delete past walk.');
       }
     } catch {
-      showToast('Connection error while deleting past walk.', 'error');
+      toast.error('Connection error while deleting past walk.');
     }
   };
 
@@ -279,7 +294,18 @@ export default function NatureWalksTab({
           {walks.map((w) => (
             <div
               key={w.id}
-              className="bg-white dark:bg-surface-dark rounded-club border-2 border-saffron/90 overflow-hidden shadow-[0_2px_12px_rgba(255,107,0,0.08)] flex flex-col justify-between"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-label={`View details for ${w.title}`}
+              onClick={() => setSelectedWalk(w)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setSelectedWalk(w);
+                }
+              }}
+              className="bg-white dark:bg-surface-dark rounded-club border-2 border-saffron/90 overflow-hidden shadow-[0_2px_12px_rgba(255,107,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950 cursor-pointer flex flex-col justify-between"
             >
               <div>
                 <div className="bg-gradient-to-r from-saffron to-saffron-mid px-4 py-3.5 flex justify-between items-start gap-3">
@@ -311,27 +337,108 @@ export default function NatureWalksTab({
               <div className="px-4 pb-4">
                 {isAdmin ? (
                   <button
-                    onClick={() => handleMoveToPast(w.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleMoveToPast(w.id);
+                    }}
                     className="w-full bg-rose hover:bg-[#c02e5a] text-white py-2 px-4 rounded-lg text-[13px] font-semibold transition-all cursor-pointer"
                   >
                     ✓ Mark as Done / Move to Past
                   </button>
                 ) : (
                   <button
-                    onClick={() =>
-                      showToast(
-                        'Thank you! Contact us at chandigarhbirdingclub2026@gmail.com to register for this walk.',
-                        'info'
-                      )
-                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedWalk(w);
+                    }}
                     className="w-full bg-saffron hover:brightness-95 text-white py-2 px-4 rounded-lg text-[13px] font-semibold transition-all cursor-pointer shadow-sm"
                   >
-                    Register Interest
+                    View details
                   </button>
                 )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedWalk && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/65 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setSelectedWalk(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="walk-detail-title"
+            className="relative grid max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto rounded-club bg-white shadow-2xl dark:bg-surface-dark md:grid-cols-[minmax(0,1.05fr)_minmax(19rem,0.95fr)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative min-h-[270px] overflow-hidden bg-jade dark:bg-jade-darkLight md:min-h-[540px]">
+              <img
+                src="https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85"
+                alt="Forest trail for a nature walk"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-jade/85 via-jade/15 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
+                <span className="inline-flex items-center gap-2 rounded bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[1.5px] backdrop-blur-sm">
+                  <Leaf size={14} aria-hidden="true" /> Upcoming walk
+                </span>
+                <p className="mt-4 font-serif text-2xl font-bold">Chandigarh Birding Club</p>
+              </div>
+            </div>
+
+            <div className="flex min-h-0 flex-col p-6 sm:p-8">
+              <button
+                type="button"
+                onClick={() => setSelectedWalk(null)}
+                aria-label="Close walk details"
+                title="Close"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-borderLight bg-white text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-borderDark dark:bg-surface-dark dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+
+              <p className="pr-10 text-[11px] font-bold uppercase tracking-[1.5px] text-saffron">Upcoming outing</p>
+              <h2 id="walk-detail-title" className="mt-2 font-serif text-3xl font-bold text-jade dark:text-emerald-400">
+                {selectedWalk.title}
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                {selectedWalk.desc || 'Details for this outing will be shared soon.'}
+              </p>
+
+              <div className="my-7 space-y-3 border-y border-borderLight py-5 dark:border-borderDark">
+                <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                  <Calendar size={17} className="mt-0.5 shrink-0 text-saffron" aria-hidden="true" />
+                  <span>{formatDatetime(selectedWalk.datetime)}</span>
+                </div>
+                <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                  <MapPin size={17} className="mt-0.5 shrink-0 text-rose" aria-hidden="true" />
+                  <span>{selectedWalk.location}</span>
+                </div>
+                <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                  <Clock size={17} className="mt-0.5 shrink-0 text-peacock" aria-hidden="true" />
+                  <span>{selectedWalk.duration || 'Duration to be confirmed'}</span>
+                </div>
+              </div>
+
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast.info(
+                      'Thank you! Contact us at chandigarhbirdingclub2026@gmail.com to register for this walk.'
+                    )
+                  }
+                  className="mt-auto w-full rounded-lg bg-saffron px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:brightness-95"
+                >
+                  Register interest
+                </button>
+              )}
+            </div>
+          </section>
         </div>
       )}
 
@@ -358,7 +465,18 @@ export default function NatureWalksTab({
           {pastWalks.map((p) => (
             <div
               key={p.id}
-              className="bg-white dark:bg-surface-dark rounded-xl border border-borderLight dark:border-borderDark overflow-hidden transition-all hover:-translate-y-1 hover:shadow-md"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-label={`View details for ${p.title}`}
+              onClick={() => setSelectedPastWalk(p)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setSelectedPastWalk(p);
+                }
+              }}
+              className="bg-white dark:bg-surface-dark rounded-xl border border-borderLight dark:border-borderDark overflow-hidden transition-all hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-peacock focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950 cursor-pointer"
             >
               <div className="w-full h-[120px] bg-gradient-to-br from-jade-light to-peacock-light dark:from-jade-darkLight dark:to-peacock-darkLight flex items-center justify-center text-5xl">
                 {p.emoji || '🌿'}
@@ -374,7 +492,10 @@ export default function NatureWalksTab({
                 </div>
                 {isAdmin && (
                   <button
-                    onClick={() => handleDeletePastWalk(p.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleDeletePastWalk(p.id);
+                    }}
                     className="mt-2.5 border border-rose text-rose hover:bg-rose hover:text-white rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer"
                   >
                     🗑 Delete
@@ -383,6 +504,84 @@ export default function NatureWalksTab({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedPastWalk && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/65 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setSelectedPastWalk(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="past-walk-detail-title"
+            className="relative grid max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto rounded-club bg-white shadow-2xl dark:bg-surface-dark md:grid-cols-[minmax(0,1.05fr)_minmax(19rem,0.95fr)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative min-h-[270px] overflow-hidden bg-jade dark:bg-jade-darkLight md:min-h-[540px]">
+              <img
+                src="https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85"
+                alt="Forest trail from a nature walk"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-jade/85 via-jade/15 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
+                <span className="inline-flex items-center gap-2 rounded bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[1.5px] backdrop-blur-sm">
+                  <Leaf size={14} aria-hidden="true" /> Completed walk
+                </span>
+                <p className="mt-4 font-serif text-2xl font-bold">Chandigarh Birding Club</p>
+              </div>
+            </div>
+
+            <div className="flex min-h-0 flex-col p-6 sm:p-8">
+              <button
+                type="button"
+                onClick={() => setSelectedPastWalk(null)}
+                aria-label="Close past walk details"
+                title="Close"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-borderLight bg-white text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-borderDark dark:bg-surface-dark dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+
+              <p className="pr-10 text-[11px] font-bold uppercase tracking-[1.5px] text-peacock dark:text-sky-400">Past outing</p>
+              <h2 id="past-walk-detail-title" className="mt-2 font-serif text-3xl font-bold text-jade dark:text-emerald-400">
+                {selectedPastWalk.title}
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                A completed Chandigarh Birding Club outing recorded in our walk archive.
+              </p>
+
+              <div className="my-7 space-y-3 border-y border-borderLight py-5 dark:border-borderDark">
+                <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                  <Calendar size={17} className="mt-0.5 shrink-0 text-saffron" aria-hidden="true" />
+                  <span>{selectedPastWalk.date}</span>
+                </div>
+                {selectedPastWalk.participants !== '—' && (
+                  <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                    <Users size={17} className="mt-0.5 shrink-0 text-peacock" aria-hidden="true" />
+                    <span>{selectedPastWalk.participants} participants</span>
+                  </div>
+                )}
+                {selectedPastWalk.species !== '—' && (
+                  <div className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                    <Bird size={17} className="mt-0.5 shrink-0 text-rose" aria-hidden="true" />
+                    <span>{selectedPastWalk.species} species recorded</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPastWalk(null)}
+                className="mt-auto w-full rounded-lg bg-peacock px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#004788]"
+              >
+                Close details
+              </button>
+            </div>
+          </section>
         </div>
       )}
 

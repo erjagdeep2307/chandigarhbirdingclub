@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Member } from '@/lib/types';
-import { useToast } from '@/components/ToastContext';
+import { toast } from 'sonner';
 import { csrfHeaders } from '@/lib/csrf';
 
 interface MembersTabProps {
@@ -16,8 +16,6 @@ export default function MembersTab({
   isAdmin,
   onRefresh,
 }: MembersTabProps) {
-  const { showToast } = useToast();
-
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -39,7 +37,7 @@ export default function MembersTab({
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      showToast('Please enter the member name.', 'error');
+      toast.error('Please enter the member name.');
       return;
     }
 
@@ -62,13 +60,13 @@ export default function MembersTab({
         setYear(String(new Date().getFullYear()));
         setSpecialty('');
         onRefresh();
-        showToast('Member added.', 'success');
+        toast.success('Member added.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to add member.', 'error');
+        toast.error(err.error || 'Failed to add member.');
       }
     } catch {
-      showToast('Connection error while adding member.', 'error');
+      toast.error('Connection error while adding member.');
     } finally {
       setIsSubmitting(false);
     }
@@ -81,13 +79,13 @@ export default function MembersTab({
       const res = await fetch(`/api/members/${id}`, { method: 'DELETE', headers: csrfHeaders() });
       if (res.ok) {
         onRefresh();
-        showToast('Member removed.', 'success');
+        toast.success('Member removed.');
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to remove member.', 'error');
+        toast.error(err.error || 'Failed to remove member.');
       }
     } catch {
-      showToast('Connection error while removing member.', 'error');
+      toast.error('Connection error while removing member.');
     }
   };
 
