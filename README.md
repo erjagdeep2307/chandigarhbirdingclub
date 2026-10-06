@@ -1,10 +1,9 @@
-# 🦅 Chandigarh Birding Club — Next.js & Neon PostgreSQL
-
-A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark theme toggle, an admin API suite, and Neon PostgreSQL database integration — preserving the exact original layout, typography, colors, and content of the Chandigarh Birding Club.
+#  Chandigarh Birding Club — Next.js & Neon PostgreSQL
+A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark theme toggle, an admin API suite, and Neon PostgreSQL database integration.
 
 ---
 
-## ✨ Features
+##  Features
 
 - **Exact Design & Layout Fidelity**:
   - Typography: **Playfair Display** (titles and serif accents) & **Inter** (body).
@@ -17,10 +16,10 @@ A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark 
     - Cream Canvas (`#FFFBF2`) in light mode & Deep Forest Night (`#0C120F`) in dark mode.
   - Authentic Indian Grey Hornbill vector logo in `public/images/logo.svg`.
   - 4 Interactive Tabs:
-    - 🌿 **Nature Walks**: Upcoming expeditions with registration, past walks records with species counts and emojis.
-    - 📸 **Bird Gallery**: Sightings grid with week labels, photo/emoji displays, spotter attribution.
-    - 👥 **Club Members**: Member cards with colored gradient initials avatars (`av-1` to `av-8`), roles, joined years, specialties.
-    - 🦅 **About**: Mission banner, 6 feature cards, contact channels, and founder card for Vartika Arora.
+    -  **Nature Walks**: Upcoming expeditions with registration, past walks records with species counts and emojis.
+    -  **Bird Gallery**: Sightings grid with week labels, photo/emoji displays, spotter attribution.
+    -  **Club Members**: Member cards with colored gradient initials avatars (`av-1` to `av-8`), roles, joined years, specialties.
+    -  **About**: Mission banner, 6 feature cards, contact channels, and founder card for Vartika Arora.
 
 - **🌗 Light & Dark Theme Switcher**:
   - Tactile Sun/Moon toggle in the header.
@@ -30,7 +29,7 @@ A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark 
     - Persists user choice in `localStorage`.
     - Zero Flash of Unstyled Content (FOUC).
 
-- **🗄️ Neon PostgreSQL Integration & Fallback Mode**:
+- ** Neon PostgreSQL Integration & Fallback Mode**:
   - Direct HTTP-pooled connection using `@neondatabase/serverless` (zero cold-start latency).
   - Tables automatically verified and created on startup:
     - `walks`
@@ -40,7 +39,7 @@ A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark 
   - **Graceful Fallback**: If `DATABASE_URL` is not yet set, the app seamlessly runs using an in-memory/starter dataset without crashing.
   - Setup script: `npm run db:setup` runs database table verification.
 
-- **🔐 Admin Authentication & API Layer**:
+- ** Admin Authentication & API Layer**:
   - Secure password authentication using administrator records stored in the database.
   - Protected API endpoints returning HTTP 401 for unauthorized mutations:
     - `POST /api/walks` — Post new walk announcement.
@@ -59,7 +58,7 @@ A full-fledged Next.js (App Router) application with Tailwind CSS, light & dark 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 ```bash
@@ -99,7 +98,7 @@ npm run start
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 chdbirdclub/
