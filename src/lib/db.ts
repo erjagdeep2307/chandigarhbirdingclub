@@ -1,143 +1,16 @@
 import { neon } from '@neondatabase/serverless';
 import { Walk, PastWalk, BirdSighting, Member } from './types';
-import { hashPassword, verifyPassword } from './auth';
+import { verifyPassword } from './auth';
 
-const isNeonConfigured = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '');
-
-// Initialize Neon SQL driver if DATABASE_URL is present
-const sql = isNeonConfigured ? neon(process.env.DATABASE_URL!) : null;
-
-// Local fallback memory store in case Neon is not configured yet
-let mockWalks: Walk[] = [
-  {
-    id: 1,
-    title: 'Sukhna Lake Dawn Migratory Watch',
-    datetime: '2026-03-29T06:00:00.000Z',
-    location: 'Sukhna Lake Regulating End, Chandigarh',
-    duration: '3 hours',
-    desc: 'Join us as we observe winter migratory waterfowl preparing for departure, alongside resident waders, grebes, and raptors. Binoculars recommended!',
-    upcoming: true,
-  },
-  {
-    id: 2,
-    title: 'Nepli Forest Trail & Canopy Exploration',
-    datetime: '2026-04-12T06:30:00.000Z',
-    location: 'Kansal Forest Gate, Sector 1',
-    duration: '3.5 hours',
-    desc: 'Deep walk through Kansal-Nepli reserve forest targeting forest birds, flycatchers, woodpeckers, and the Indian Grey Hornbill.',
-    upcoming: true,
-  }
-];
-
-let mockPastWalks: PastWalk[] = [
-  {
-    id: 101,
-    title: 'Sukhna Wetland Census',
-    date: 'Feb 2026',
-    participants: '24 birder',
-    species: '48',
-    emoji: '🦆',
-  },
-  {
-    id: 102,
-    title: 'Morni Foothills Birding',
-    date: 'Jan 2026',
-    participants: '18',
-    species: '36',
-    emoji: '🦅',
-  },
-  {
-    id: 103,
-    title: 'Rock Garden Urban Avian Walk',
-    date: 'Dec 2025',
-    participants: '15',
-    species: '22',
-    emoji: '🌿',
-  }
-];
-
-let mockBirds: BirdSighting[] = [
-  {
-    id: 201,
-    name: 'Indian Grey Hornbill',
-    latin: 'Ocyceros birostris',
-    location: 'Sukhna Lake Promenade',
-    photo: '',
-    emoji: '🪶',
-    spotter: 'Vartika Arora',
-    week: 'This week',
-  },
-  {
-    id: 202,
-    name: 'Indian Roller',
-    latin: 'Coracias benghalensis',
-    location: 'Lake Club Grounds',
-    photo: '',
-    emoji: '🐦',
-    spotter: 'Priya Sharma',
-    week: 'This week',
-  },
-  {
-    id: 203,
-    name: 'Black-winged Stilt',
-    latin: 'Himantopus himantopus',
-    location: 'Sukhna Wet Zone',
-    photo: '',
-    emoji: '🪿',
-    spotter: 'Amanpreet Singh',
-    week: 'Last week',
-  },
-  {
-    id: 204,
-    name: 'White-throated Kingfisher',
-    latin: 'Halcyon smyrnensis',
-    location: 'Garden of Silence',
-    photo: '',
-    emoji: '🐟',
-    spotter: 'Rohit Verma',
-    week: 'Last week',
-  }
-];
-
-let mockMembers: Member[] = [
-  {
-    id: 301,
-    name: 'Vartika Arora',
-    role: 'Founder & Naturalist',
-    year: 2023,
-    specialty: 'Raptors & Wetlands',
-    av: 'av-2',
-  },
-  {
-    id: 302,
-    name: 'Amanpreet Singh',
-    role: 'Club Coordinator',
-    year: 2023,
-    specialty: 'Passerines & Audio Identification',
-    av: 'av-3',
-  },
-  {
-    id: 303,
-    name: 'Priya Sharma',
-    role: 'Photographer',
-    year: 2024,
-    specialty: 'Avian Photography & Documentation',
-    av: 'av-4',
-  },
-  {
-    id: 304,
-    name: 'Karan Mehra',
-    role: 'Member',
-    year: 2024,
-    specialty: 'Migratory Waterfowl',
-    av: 'av-5',
-  }
-];
-
+const databaseUrl = process.env.DATABASE_URL?.trim();
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL is required. Configure Neon PostgreSQL to use the live data API.');
+}
+const sql = neon(databaseUrl);
 // Ensure tables exist in Neon
 let tablesInitialized = false;
 export async function ensureTablesExist() {
-  if (!sql || tablesInitialized) return;
+  if (tablesInitialized) return;
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -197,51 +70,10 @@ export async function ensureTablesExist() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
-
-    // Seed initial data if tables are empty
-    const walksCount = await sql`SELECT count(*) as count FROM walks`;
-    if (parseInt(walksCount[0].count, 10) === 0) {
-      for (const w of mockWalks) {
-        await sql`
-          INSERT INTO walks (title, datetime, location, duration, description, upcoming)
-          VALUES (${w.title}, ${w.datetime}, ${w.location}, ${w.duration}, ${w.desc}, ${w.upcoming})
-        `;
-      }
-    }
-
-    const pastCount = await sql`SELECT count(*) as count FROM past_walks`;
-    if (parseInt(pastCount[0].count, 10) === 0) {
-      for (const pw of mockPastWalks) {
-        await sql`
-          INSERT INTO past_walks (title, date, participants, species, emoji)
-          VALUES (${pw.title}, ${pw.date}, ${pw.participants}, ${pw.species}, ${pw.emoji})
-        `;
-      }
-    }
-
-    const birdsCount = await sql`SELECT count(*) as count FROM birds`;
-    if (parseInt(birdsCount[0].count, 10) === 0) {
-      for (const b of mockBirds) {
-        await sql`
-          INSERT INTO birds (name, latin, location, photo, emoji, spotter, week)
-          VALUES (${b.name}, ${b.latin || ''}, ${b.location}, ${b.photo || ''}, ${b.emoji}, ${b.spotter}, ${b.week})
-        `;
-      }
-    }
-
-    const membersCount = await sql`SELECT count(*) as count FROM members`;
-    if (parseInt(membersCount[0].count, 10) === 0) {
-      for (const m of mockMembers) {
-        await sql`
-          INSERT INTO members (name, role, year, specialty, avatar_class)
-          VALUES (${m.name}, ${m.role}, ${m.year}, ${m.specialty || ''}, ${m.av})
-        `;
-      }
-    }
-
     tablesInitialized = true;
   } catch (err) {
     console.error('Failed to initialize Neon database tables:', err);
+    throw err;
   }
 }
 
@@ -249,315 +81,85 @@ export async function ensureTablesExist() {
 export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
   const normalizedUsername = username.trim();
   if (!normalizedUsername || !password) return false;
-
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      SELECT password_hash, role, is_active
-      FROM users
-      WHERE username = ${normalizedUsername}
-      LIMIT 1
-    `;
-
-    if (rows.length === 0 || rows[0].role !== 'admin' || !rows[0].is_active) {
-      return false;
-    }
-
-    return verifyPassword(password, rows[0].password_hash);
-  }
-
-  return false;
+  await ensureTablesExist();
+  const rows = await sql`SELECT password_hash, role, is_active FROM users WHERE username = ${normalizedUsername} LIMIT 1`;
+  if (rows.length === 0 || rows[0].role !== 'admin' || !rows[0].is_active) return false;
+  return verifyPassword(password, rows[0].password_hash);
 }
-
 export async function getUpcomingWalks(): Promise<Walk[]> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      SELECT id, title, datetime, location, duration, description as desc, upcoming, created_at
-      FROM walks
-      WHERE upcoming = TRUE
-      ORDER BY datetime ASC
-    `;
-    return rows.map(r => ({
-      id: r.id,
-      title: r.title,
-      datetime: new Date(r.datetime).toISOString(),
-      location: r.location,
-      duration: r.duration,
-      desc: r.desc || '',
-      upcoming: r.upcoming,
-      created_at: r.created_at,
-    }));
-  }
-  return mockWalks.filter(w => w.upcoming);
+  await ensureTablesExist();
+  const rows = await sql`SELECT id, title, datetime, location, duration, description as desc, upcoming, created_at FROM walks WHERE upcoming = TRUE ORDER BY datetime ASC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', upcoming: r.upcoming, created_at: r.created_at }));
 }
-
 export async function addWalk(walk: Omit<Walk, 'id' | 'upcoming'>): Promise<Walk> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      INSERT INTO walks (title, datetime, location, duration, description, upcoming)
-      VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, TRUE)
-      RETURNING id, title, datetime, location, duration, description as desc, upcoming, created_at
-    `;
-    const r = rows[0];
-    return {
-      id: r.id,
-      title: r.title,
-      datetime: new Date(r.datetime).toISOString(),
-      location: r.location,
-      duration: r.duration,
-      desc: r.desc,
-      upcoming: r.upcoming,
-      created_at: r.created_at,
-    };
-  }
-  const newWalk: Walk = {
-    id: Date.now(),
-    title: walk.title,
-    datetime: walk.datetime,
-    location: walk.location,
-    duration: walk.duration || 'TBD',
-    desc: walk.desc || '',
-    upcoming: true,
-  };
-  mockWalks.unshift(newWalk);
-  return newWalk;
+  await ensureTablesExist();
+  const rows = await sql`INSERT INTO walks (title, datetime, location, duration, description, upcoming) VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, TRUE) RETURNING id, title, datetime, location, duration, description as desc, upcoming, created_at`;
+  const r = rows[0];
+  return { id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', upcoming: r.upcoming, created_at: r.created_at };
 }
-
 export async function markWalkAsPast(id: string | number): Promise<boolean> {
-  if (sql) {
-    await ensureTablesExist();
-    const walk = await sql`SELECT * FROM walks WHERE id = ${id}`;
-    if (walk.length === 0) return false;
-    const w = walk[0];
-    await sql`UPDATE walks SET upcoming = FALSE WHERE id = ${id}`;
-    const formattedDate = new Date(w.datetime).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-    await sql`
-      INSERT INTO past_walks (title, date, participants, species, emoji)
-      VALUES (${w.title}, ${formattedDate}, '—', '—', '🌿')
-    `;
-    return true;
-  }
-  const idx = mockWalks.findIndex(w => String(w.id) === String(id));
-  if (idx !== -1) {
-    const w = mockWalks[idx];
-    mockWalks.splice(idx, 1);
-    const d = new Date(w.datetime);
-    mockPastWalks.unshift({
-      id: Date.now(),
-      title: w.title,
-      date: isNaN(d.getTime()) ? 'Recently' : d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-      participants: '—',
-      species: '—',
-      emoji: '🌿',
-    });
-    return true;
-  }
-  return false;
-}
-
-export async function deleteWalk(id: string | number): Promise<boolean> {
-  if (sql) {
-    await ensureTablesExist();
-    await sql`DELETE FROM walks WHERE id = ${id}`;
-    return true;
-  }
-  mockWalks = mockWalks.filter(w => String(w.id) !== String(id));
+  await ensureTablesExist();
+  const rows = await sql`SELECT * FROM walks WHERE id = ${id}`;
+  if (rows.length === 0) return false;
+  const walk = rows[0];
+  await sql`UPDATE walks SET upcoming = FALSE WHERE id = ${id}`;
+  const formattedDate = new Date(walk.datetime).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  await sql`INSERT INTO past_walks (title, date, participants, species, emoji) VALUES (${walk.title}, ${formattedDate}, '—', '—', '🌿')`;
   return true;
 }
-
+export async function deleteWalk(id: string | number): Promise<boolean> {
+  await ensureTablesExist();
+  const deleted = await sql`DELETE FROM walks WHERE id = ${id} RETURNING id`;
+  return deleted.length > 0;
+}
 // ── PAST WALKS CRUD ──
 export async function getPastWalks(): Promise<PastWalk[]> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      SELECT id, title, date, participants, species, emoji, created_at
-      FROM past_walks
-      ORDER BY id DESC
-    `;
-    return rows.map(r => ({
-      id: r.id,
-      title: r.title,
-      date: r.date,
-      participants: r.participants,
-      species: r.species,
-      emoji: r.emoji,
-      created_at: r.created_at,
-    }));
-  }
-  return mockPastWalks;
+  await ensureTablesExist();
+  const rows = await sql`SELECT id, title, date, participants, species, emoji, created_at FROM past_walks ORDER BY id DESC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, emoji: r.emoji, created_at: r.created_at }));
 }
-
 export async function addPastWalk(walk: Omit<PastWalk, 'id'>): Promise<PastWalk> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      INSERT INTO past_walks (title, date, participants, species, emoji)
-      VALUES (${walk.title}, ${walk.date}, ${walk.participants || '—'}, ${walk.species || '—'}, ${walk.emoji || '🌿'})
-      RETURNING id, title, date, participants, species, emoji, created_at
-    `;
-    const r = rows[0];
-    return {
-      id: r.id,
-      title: r.title,
-      date: r.date,
-      participants: r.participants,
-      species: r.species,
-      emoji: r.emoji,
-      created_at: r.created_at,
-    };
-  }
-  const newPastWalk: PastWalk = {
-    id: Date.now(),
-    title: walk.title,
-    date: walk.date,
-    participants: walk.participants || '—',
-    species: walk.species || '—',
-    emoji: walk.emoji || '🌿',
-  };
-  mockPastWalks.unshift(newPastWalk);
-  return newPastWalk;
+  await ensureTablesExist();
+  const rows = await sql`INSERT INTO past_walks (title, date, participants, species, emoji) VALUES (${walk.title}, ${walk.date}, ${walk.participants || '—'}, ${walk.species || '—'}, ${walk.emoji || '🌿'}) RETURNING id, title, date, participants, species, emoji, created_at`;
+  const r = rows[0];
+  return { id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, emoji: r.emoji, created_at: r.created_at };
 }
-
 export async function deletePastWalk(id: string | number): Promise<boolean> {
-  if (sql) {
-    await ensureTablesExist();
-    await sql`DELETE FROM past_walks WHERE id = ${id}`;
-    return true;
-  }
-  mockPastWalks = mockPastWalks.filter(pw => String(pw.id) !== String(id));
-  return true;
+  await ensureTablesExist();
+  const deleted = await sql`DELETE FROM past_walks WHERE id = ${id} RETURNING id`;
+  return deleted.length > 0;
 }
-
 // ── BIRDS CRUD ──
 export async function getBirdSightings(): Promise<BirdSighting[]> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      SELECT id, name, latin, location, photo, emoji, spotter, week, created_at
-      FROM birds
-      ORDER BY id DESC
-    `;
-    return rows.map(r => ({
-      id: r.id,
-      name: r.name,
-      latin: r.latin || '',
-      location: r.location,
-      photo: r.photo || '',
-      emoji: r.emoji || '🐦',
-      spotter: r.spotter || 'Anonymous',
-      week: r.week || 'This week',
-      created_at: r.created_at,
-    }));
-  }
-  return mockBirds;
+  await ensureTablesExist();
+  const rows = await sql`SELECT id, name, latin, location, photo, emoji, spotter, week, created_at FROM birds ORDER BY id DESC`;
+  return rows.map((r) => ({ id: r.id, name: r.name, latin: r.latin || '', location: r.location, photo: r.photo || '', emoji: r.emoji || '🐦', spotter: r.spotter || 'Anonymous', week: r.week || 'This week', created_at: r.created_at }));
 }
-
 export async function addBirdSighting(bird: Omit<BirdSighting, 'id'>): Promise<BirdSighting> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      INSERT INTO birds (name, latin, location, photo, emoji, spotter, week)
-      VALUES (${bird.name}, ${bird.latin || ''}, ${bird.location}, ${bird.photo || ''}, ${bird.emoji || '🐦'}, ${bird.spotter || 'Anonymous'}, ${bird.week || 'This week'})
-      RETURNING id, name, latin, location, photo, emoji, spotter, week, created_at
-    `;
-    const r = rows[0];
-    return {
-      id: r.id,
-      name: r.name,
-      latin: r.latin || '',
-      location: r.location,
-      photo: r.photo || '',
-      emoji: r.emoji,
-      spotter: r.spotter,
-      week: r.week,
-      created_at: r.created_at,
-    };
-  }
-  const newBird: BirdSighting = {
-    id: Date.now(),
-    name: bird.name,
-    latin: bird.latin || '',
-    location: bird.location,
-    photo: bird.photo || '',
-    emoji: bird.emoji || '🐦',
-    spotter: bird.spotter || 'Anonymous',
-    week: bird.week || 'This week',
-  };
-  mockBirds.unshift(newBird);
-  return newBird;
+  await ensureTablesExist();
+  const rows = await sql`INSERT INTO birds (name, latin, location, photo, emoji, spotter, week) VALUES (${bird.name}, ${bird.latin || ''}, ${bird.location}, ${bird.photo || ''}, ${bird.emoji || '🐦'}, ${bird.spotter || 'Anonymous'}, ${bird.week || 'This week'}) RETURNING id, name, latin, location, photo, emoji, spotter, week, created_at`;
+  const r = rows[0];
+  return { id: r.id, name: r.name, latin: r.latin || '', location: r.location, photo: r.photo || '', emoji: r.emoji, spotter: r.spotter, week: r.week, created_at: r.created_at };
 }
-
 export async function deleteBirdSighting(id: string | number): Promise<boolean> {
-  if (sql) {
-    await ensureTablesExist();
-    await sql`DELETE FROM birds WHERE id = ${id}`;
-    return true;
-  }
-  mockBirds = mockBirds.filter(b => String(b.id) !== String(id));
-  return true;
+  await ensureTablesExist();
+  const deleted = await sql`DELETE FROM birds WHERE id = ${id} RETURNING id`;
+  return deleted.length > 0;
 }
-
 // ── MEMBERS CRUD ──
 export async function getMembers(): Promise<Member[]> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      SELECT id, name, role, year, specialty, avatar_class as av, created_at
-      FROM members
-      ORDER BY id ASC
-    `;
-    return rows.map(r => ({
-      id: r.id,
-      name: r.name,
-      role: r.role,
-      year: r.year,
-      specialty: r.specialty || '',
-      av: r.av || 'av-1',
-      created_at: r.created_at,
-    }));
-  }
-  return mockMembers;
+  await ensureTablesExist();
+  const rows = await sql`SELECT id, name, role, year, specialty, avatar_class as av, created_at FROM members ORDER BY id ASC`;
+  return rows.map((r) => ({ id: r.id, name: r.name, role: r.role, year: r.year, specialty: r.specialty || '', av: r.av || 'av-1', created_at: r.created_at }));
 }
-
 export async function addMember(member: Omit<Member, 'id'>): Promise<Member> {
-  if (sql) {
-    await ensureTablesExist();
-    const rows = await sql`
-      INSERT INTO members (name, role, year, specialty, avatar_class)
-      VALUES (${member.name}, ${member.role || 'Member'}, ${member.year || new Date().getFullYear()}, ${member.specialty || ''}, ${member.av || 'av-1'})
-      RETURNING id, name, role, year, specialty, avatar_class as av, created_at
-    `;
-    const r = rows[0];
-    return {
-      id: r.id,
-      name: r.name,
-      role: r.role,
-      year: r.year,
-      specialty: r.specialty || '',
-      av: r.av,
-      created_at: r.created_at,
-    };
-  }
-  const newMember: Member = {
-    id: Date.now(),
-    name: member.name,
-    role: member.role || 'Member',
-    year: member.year || new Date().getFullYear(),
-    specialty: member.specialty || '',
-    av: member.av || 'av-1',
-  };
-  mockMembers.push(newMember);
-  return newMember;
+  await ensureTablesExist();
+  const rows = await sql`INSERT INTO members (name, role, year, specialty, avatar_class) VALUES (${member.name}, ${member.role || 'Member'}, ${member.year || new Date().getFullYear()}, ${member.specialty || ''}, ${member.av || 'av-1'}) RETURNING id, name, role, year, specialty, avatar_class as av, created_at`;
+  const r = rows[0];
+  return { id: r.id, name: r.name, role: r.role, year: r.year, specialty: r.specialty || '', av: r.av, created_at: r.created_at };
 }
-
 export async function deleteMember(id: string | number): Promise<boolean> {
-  if (sql) {
-    await ensureTablesExist();
-    await sql`DELETE FROM members WHERE id = ${id}`;
-    return true;
-  }
-  mockMembers = mockMembers.filter(m => String(m.id) !== String(id));
-  return true;
+  await ensureTablesExist();
+  const deleted = await sql`DELETE FROM members WHERE id = ${id} RETURNING id`;
+  return deleted.length > 0;
 }

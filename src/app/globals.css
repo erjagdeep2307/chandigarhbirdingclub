@@ -22,18 +22,6 @@
   color-scheme: light;
 }
 
-.dark {
-  --cream: #0c120f;
-  --text: #F3F4F6;
-  --text-muted: #9CA3AF;
-  --border: #26362C;
-  --saffron-light: rgba(255, 107, 0, 0.16);
-  --jade-light: rgba(27, 122, 74, 0.22);
-  --peacock-light: rgba(0, 87, 168, 0.22);
-  --rose-light: rgba(214, 59, 106, 0.22);
-  color-scheme: dark;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -43,7 +31,6 @@ body {
   background-color: var(--cream);
   color: var(--text);
   min-height: 100vh;
-  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* ── AVATAR GRADIENTS ── */

@@ -48,7 +48,7 @@ export default function Footer({ onTabChange }: FooterProps) {
             <div className="flex items-center gap-3 mb-4">
               <span className="logo-frame ring-2 ring-amber-400/50 shrink-0 bg-white">
                 <Image
-                  src="/images/logo.svg"
+                  src="/images/logo.png"
                   alt="Chandigarh Birding Club Logo"
                   width={50}
                   height={50}
@@ -208,9 +208,9 @@ export default function Footer({ onTabChange }: FooterProps) {
         <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
           <div className="text-center sm:text-left">
             <p>© {new Date().getFullYear()} Chandigarh Birding Club. All rights reserved.</p>
-            <p className="text-[11px] text-neutral-500 mt-0.5">
+            {/* <p className="text-[11px] text-neutral-500 mt-0.5">
               Powered by Next.js, Tailwind CSS & Neon PostgreSQL.
-            </p>
+            </p> */}
           </div>
 
           <button

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
-
-import { ThemeProvider } from '@/components/ThemeContext';
+import QueryProvider from '@/components/QueryProvider';
 import { Toaster } from 'sonner';
 
 const inter = Inter({
@@ -32,34 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
-        <meta name="color-scheme" content="light dark" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var saved = localStorage.getItem('cbc-theme');
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var theme = saved || (prefersDark ? 'dark' : 'light');
-                  if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                  var meta = document.querySelector('meta[name="color-scheme"]');
-                  if (meta) meta.content = theme;
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
+        <meta name="color-scheme" content="light" />
       </head>
       <body className="antialiased min-h-screen">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <QueryProvider>{children}</QueryProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>

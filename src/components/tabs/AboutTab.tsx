@@ -59,13 +59,13 @@ export default function AboutTab() {
         {features.map((f, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-surface-dark border border-borderLight dark:border-borderDark rounded-xl p-5 transition-all hover:shadow-sm"
+            className="bg-white  border border-borderLight  rounded-xl p-5 transition-all hover:shadow-sm"
           >
             <div className="text-2xl sm:text-[28px] mb-2.5 select-none">{f.icon}</div>
-            <h3 className="text-[15px] font-semibold text-neutral-900 dark:text-neutral-100 mb-1.5">
+            <h3 className="text-[15px] font-semibold text-neutral-900  mb-1.5">
               {f.title}
             </h3>
-            <p className="text-[13px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+            <p className="text-[13px] text-neutral-500  leading-relaxed">
               {f.desc}
             </p>
           </div>
@@ -73,8 +73,8 @@ export default function AboutTab() {
       </div>
 
       {/* Contact Section */}
-      <div className="bg-peacock-light dark:bg-[#0b1c2e] border border-[#c0d8f5] dark:border-[#1a385c] rounded-[14px] p-6 text-peacock dark:text-sky-300">
-        <h3 className="font-serif text-lg font-bold mb-3.5 text-peacock dark:text-sky-200">
+      <div className="bg-peacock-light  border border-[#c0d8f5]  rounded-[14px] p-6 text-peacock ">
+        <h3 className="font-serif text-lg font-bold mb-3.5 text-peacock ">
           🌐 Get in Touch
         </h3>
         <div className="flex flex-wrap gap-6 mb-5">
@@ -101,8 +101,8 @@ export default function AboutTab() {
         </div>
 
         {/* Founder Card */}
-        <div className="pt-4 border-t border-[#c0d8f5] dark:border-[#1a385c]">
-          <p className="text-xs font-bold tracking-[1.5px] uppercase text-neutral-500 dark:text-neutral-400 mb-3">
+        <div className="pt-4 border-t border-[#c0d8f5] ">
+          <p className="text-xs font-bold tracking-[1.5px] uppercase text-neutral-500  mb-3">
             Founder
           </p>
           <div className="flex items-center gap-3.5">
@@ -110,12 +110,12 @@ export default function AboutTab() {
               VA
             </div>
             <div>
-              <div className="text-[15px] font-semibold text-neutral-900 dark:text-neutral-100 leading-snug">
+              <div className="text-[15px] font-semibold text-neutral-900  leading-snug">
                 Vartika Arora
               </div>
               <a
                 href="mailto:vartika.arora2010@gmail.com"
-                className="text-[13px] text-peacock dark:text-sky-400 hover:underline"
+                className="text-[13px] text-peacock  hover:underline"
               >
                 vartika.arora2010@gmail.com
               </a>

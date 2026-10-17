@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Header, { TabType } from '@/components/Header';
+import HeroSection from '@/components/HeroSection';
 import AdminBar from '@/components/AdminBar';
 import HornbillBanner from '@/components/HornbillBanner';
 import PasswordModal from '@/components/PasswordModal';
@@ -13,98 +15,63 @@ import Footer from '@/components/Footer';
 import { toast } from 'sonner';
 import { Walk, PastWalk, BirdSighting, Member } from '@/lib/types';
 import { csrfHeaders } from '@/lib/csrf';
-import {
-  initialMockWalks,
-  initialMockPastWalks,
-  initialMockBirds,
-  initialMockMembers,
-} from '@/lib/initialData';
+import { apiRequest, queryKeys } from '@/lib/api';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('walks');
-  const [isAdmin, setIsAdmin] = useState(false);
+  const queryClient = useQueryClient();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // Initialize with initial data immediately so there's ZERO loading delay
-  const [walks, setWalks] = useState<Walk[]>(initialMockWalks);
-  const [pastWalks, setPastWalks] = useState<PastWalk[]>(initialMockPastWalks);
-  const [birds, setBirds] = useState<BirdSighting[]>(initialMockBirds);
-  const [members, setMembers] = useState<Member[]>(initialMockMembers);
+  const authQuery = useQuery({
+    queryKey: queryKeys.auth,
+    queryFn: () => apiRequest<{ isAdmin: boolean }>('/api/auth/check'),
+  });
+  const walksQuery = useQuery({ queryKey: queryKeys.walks, queryFn: () => apiRequest<Walk[]>('/api/walks'), enabled: activeTab === 'walks' });
+  const pastWalksQuery = useQuery({ queryKey: queryKeys.pastWalks, queryFn: () => apiRequest<PastWalk[]>('/api/walks/past'), enabled: activeTab === 'walks' });
+  const birdsQuery = useQuery({ queryKey: queryKeys.birds, queryFn: () => apiRequest<BirdSighting[]>('/api/birds'), enabled: activeTab === 'gallery' });
+  const membersQuery = useQuery({ queryKey: queryKeys.members, queryFn: () => apiRequest<Member[]>('/api/members'), enabled: activeTab === 'members' });
+  const isAdmin = Boolean(authQuery.data?.isAdmin);
+  const activeTabQuery = activeTab === 'walks'
+    ? walksQuery
+    : activeTab === 'gallery'
+      ? birdsQuery
+      : activeTab === 'members'
+        ? membersQuery
+        : null;
 
-  // Check admin session status
-  const checkAdminStatus = useCallback(async () => {
-    try {
-      const res = await fetch('/api/auth/check');
-      const data = await res.json();
-      setIsAdmin(Boolean(data.isAdmin));
-    } catch {
-      setIsAdmin(false);
-    }
-  }, []);
+  const refreshData = () => queryClient.invalidateQueries({ queryKey: ['walks'] })
+    .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.birds }))
+    .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.members }));
 
-  // Fetch updated club data from Neon PostgreSQL / API in background
-  const fetchData = useCallback(async () => {
-    try {
-      const [walksRes, pastWalksRes, birdsRes, membersRes] = await Promise.all([
-        fetch('/api/walks'),
-        fetch('/api/walks/past'),
-        fetch('/api/birds'),
-        fetch('/api/members'),
-      ]);
-
-      if (walksRes.ok) {
-        const data = await walksRes.json();
-        if (Array.isArray(data) && data.length > 0) setWalks(data);
-      }
-      if (pastWalksRes.ok) {
-        const data = await pastWalksRes.json();
-        if (Array.isArray(data) && data.length > 0) setPastWalks(data);
-      }
-      if (birdsRes.ok) {
-        const data = await birdsRes.json();
-        if (Array.isArray(data) && data.length > 0) setBirds(data);
-      }
-      if (membersRes.ok) {
-        const data = await membersRes.json();
-        if (Array.isArray(data) && data.length > 0) setMembers(data);
-      }
-    } catch (err) {
-      console.warn('API sync: using current data', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    checkAdminStatus();
-    fetchData();
-  }, [checkAdminStatus, fetchData]);
+  const logoutMutation = useMutation({
+    mutationFn: () => apiRequest<{ success: boolean }>('/api/auth/logout', { method: 'POST', headers: csrfHeaders() }),
+    onSuccess: async () => {
+      queryClient.setQueryData(queryKeys.auth, { isAdmin: false });
+      await refreshData();
+      toast.success('Logged out of admin mode.');
+    },
+    onError: (error) => toast.error(error.message || 'Could not log out. Please try again.'),
+  });
 
   // Handle Logout
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST', headers: csrfHeaders() });
-      setIsAdmin(false);
-      fetchData();
-      toast.success('Logged out of admin mode.');
-    } catch (err) {
-      console.error('Error logging out:', err);
-      toast.error('Could not log out. Please try again.');
-    }
+    logoutMutation.mutate();
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream dark:bg-[#0c120f] text-neutral-900 dark:text-neutral-100 transition-colors duration-250">
+    <div className="min-h-screen flex flex-col bg-cream text-neutral-900">
       {/* Password Modal */}
       <PasswordModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         onSuccess={() => {
-          setIsAdmin(true);
-          fetchData();
+          queryClient.setQueryData(queryKeys.auth, { isAdmin: true });
+          refreshData();
           toast.success('Admin mode unlocked.');
         }}
       />
 
-      {/* Header with navigation and theme switcher */}
+      {/* Header navigation */}
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Admin Status Bar */}
@@ -114,31 +81,41 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
+      <HeroSection onTabChange={setActiveTab} />
+
       {/* Hornbill Banner */}
       <HornbillBanner />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1100px] w-full mx-auto px-4 sm:px-6 py-8 pb-16">
-        {activeTab === 'walks' && (
+      <main id="club-content" className="flex-1 max-w-[1100px] w-full mx-auto px-4 sm:px-6 py-8 pb-16">
+        {activeTabQuery?.isPending && (
+          <p className="py-12 text-center text-sm text-neutral-500" role="status">Loading live data…</p>
+        )}
+        {activeTabQuery?.isError && (
+          <div className="py-12 text-center" role="alert">
+            <p className="text-sm text-rose">Could not load live data: {activeTabQuery.error.message}</p>
+            <button type="button" onClick={() => activeTabQuery.refetch()} className="mt-3 text-sm font-semibold text-peacock underline">
+              Try again
+            </button>
+          </div>
+        )}
+        {walksQuery.isSuccess && activeTab === 'walks' && (
           <NatureWalksTab
-            walks={walks}
-            pastWalks={pastWalks}
+            walks={walksQuery.data ?? []}
+            pastWalks={pastWalksQuery.data ?? []}
             isAdmin={isAdmin}
-            onRefresh={fetchData}
           />
         )}
-        {activeTab === 'gallery' && (
+        {birdsQuery.isSuccess && activeTab === 'gallery' && (
           <BirdGalleryTab
-            birds={birds}
+            birds={birdsQuery.data ?? []}
             isAdmin={isAdmin}
-            onRefresh={fetchData}
           />
         )}
-        {activeTab === 'members' && (
+        {membersQuery.isSuccess && activeTab === 'members' && (
           <MembersTab
-            members={members}
+            members={membersQuery.data ?? []}
             isAdmin={isAdmin}
-            onRefresh={fetchData}
           />
         )}
         {activeTab === 'about' && <AboutTab />}

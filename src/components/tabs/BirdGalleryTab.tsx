@@ -1,23 +1,23 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import Image from 'next/image';
 import { Calendar, MapPin, UserRound, X, LoaderCircle, Upload } from 'lucide-react';
 import { BirdSighting } from '@/lib/types';
 import { toast } from 'sonner';
 import { csrfHeaders } from '@/lib/csrf';
 import { getCloudinaryModalUrl, uploadCloudinary } from '@/lib/cloudinary';
+import { queryKeys, useApiMutation } from '@/lib/api';
 
 interface BirdGalleryTabProps {
   birds: BirdSighting[];
   isAdmin: boolean;
-  onRefresh: () => void;
 }
 
 export default function BirdGalleryTab({
   birds,
   isAdmin,
-  onRefresh,
 }: BirdGalleryTabProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
@@ -30,6 +30,8 @@ export default function BirdGalleryTab({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [selectedBird, setSelectedBird] = useState<BirdSighting | null>(null);
+  const apiMutation = useApiMutation([queryKeys.birds]);
+  const imageUploadMutation = useMutation({ mutationFn: uploadCloudinary });
 
   useEffect(() => {
     if (!selectedBird) return;
@@ -50,7 +52,7 @@ export default function BirdGalleryTab({
 
     setIsUploadingImage(true);
     try {
-      const { secure_url } = await uploadCloudinary(file);
+      const { secure_url } = await imageUploadMutation.mutateAsync(file);
       setPhoto(secure_url);
       toast.success('Image uploaded.');
     } catch (error) {
@@ -67,58 +69,34 @@ export default function BirdGalleryTab({
       toast.error('Please fill in Bird Name and Location.');
       return;
     }
-
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/birds', {
+      await apiMutation.mutateAsync({
+        url: '/api/birds',
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({
-          name: name.trim(),
-          latin: latin.trim(),
-          location: location.trim(),
-          photo: photo.trim(),
-          emoji: emoji.trim() || '🐦',
-          spotter: spotter.trim() || 'Anonymous',
-          week: week.trim() || 'This week',
-        }),
+        headers: csrfHeaders(),
+        body: {
+          name: name.trim(), latin: latin.trim(), location: location.trim(), photo: photo.trim(),
+          emoji: emoji.trim() || '🐦', spotter: spotter.trim() || 'Anonymous', week: week.trim() || 'This week',
+        },
       });
-
-      if (res.ok) {
-        setName('');
-        setLatin('');
-        setLocation('');
-        setPhoto('');
-        setEmoji('🐦');
-        setSpotter('');
-        setWeek('This week');
-        onRefresh();
-        toast.success('Bird sighting added.');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to add bird sighting.');
-      }
-    } catch {
-      toast.error('Connection error while adding sighting.');
+      setName(''); setLatin(''); setLocation(''); setPhoto(''); setEmoji('🐦'); setSpotter(''); setWeek('This week');
+      toast.success('Bird sighting added.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to add bird sighting.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
   // Delete sighting via API
   const handleDeleteBird = async (id: number | string) => {
     if (!confirm('Remove this sighting?')) return;
     try {
-      const res = await fetch(`/api/birds/${id}`, { method: 'DELETE', headers: csrfHeaders() });
-      if (res.ok) {
-        onRefresh();
-        toast.success('Bird sighting removed.');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to remove bird sighting.');
-      }
-    } catch {
-      toast.error('Connection error while removing sighting.');
+      await apiMutation.mutateAsync({ url: `/api/birds/${id}`, method: 'DELETE', headers: csrfHeaders() });
+      setSelectedBird((current) => current && String(current.id) === String(id) ? null : current);
+      toast.success('Bird sighting removed.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove bird sighting.');
     }
   };
 
@@ -127,10 +105,10 @@ export default function BirdGalleryTab({
       {/* Header */}
       <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h2 className="font-serif text-[28px] font-bold text-jade dark:text-emerald-400">
+          <h2 className="font-serif text-[28px] font-bold text-jade ">
             📸 Bird Gallery
           </h2>
-          <p className="text-[14px] text-neutral-500 dark:text-neutral-400 mt-1.5">
+          <p className="text-[14px] text-neutral-500  mt-1.5">
             Weekly sightings spotted by our members
           </p>
         </div>
@@ -138,14 +116,14 @@ export default function BirdGalleryTab({
 
       {/* Admin Panel: Add Sighting */}
       {isAdmin && (
-        <div className="bg-white dark:bg-surface-dark border-2 border-dashed border-peacock rounded-club p-6 mb-7 shadow-sm">
-          <h3 className="text-[15px] font-semibold text-peacock dark:text-sky-400 mb-4">
+        <div className="bg-white  border-2 border-dashed border-peacock rounded-club p-6 mb-7 shadow-sm">
+          <h3 className="text-[15px] font-semibold text-peacock  mb-4">
             🐦 Add a New Bird Sighting
           </h3>
           <form onSubmit={handleAddSighting}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Bird Name (Common)
                 </label>
                 <input
@@ -153,11 +131,11 @@ export default function BirdGalleryTab({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Indian Roller"
-                  className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Scientific Name
                 </label>
                 <input
@@ -165,14 +143,14 @@ export default function BirdGalleryTab({
                   value={latin}
                   onChange={(e) => setLatin(e.target.value)}
                   placeholder="e.g. Coracias benghalensis"
-                  className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Spotted At
                 </label>
                 <input
@@ -180,11 +158,11 @@ export default function BirdGalleryTab({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Sukhna Lake"
-                  className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Photo URL (optional)
                 </label>
                 <div className="flex gap-2">
@@ -193,7 +171,7 @@ export default function BirdGalleryTab({
                     value={photo}
                     onChange={(e) => setPhoto(e.target.value)}
                     placeholder="https://..."
-                    className="min-w-0 flex-1 px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                    className="min-w-0 flex-1 px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                   />
                   <input
                     ref={imageInputRef}
@@ -224,7 +202,7 @@ export default function BirdGalleryTab({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Emoji Icon (if no photo)
                 </label>
                 <input
@@ -233,11 +211,11 @@ export default function BirdGalleryTab({
                   onChange={(e) => setEmoji(e.target.value)}
                   maxLength={4}
                   placeholder="🦅"
-                  className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Spotted By
                 </label>
                 <input
@@ -245,13 +223,13 @@ export default function BirdGalleryTab({
                   value={spotter}
                   onChange={(e) => setSpotter(e.target.value)}
                   placeholder="Member name"
-                  className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
               </div>
             </div>
 
             <div className="mb-3">
-              <label className="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
+              <label className="block text-xs font-semibold text-neutral-500  mb-1">
                 Week Label
               </label>
               <input
@@ -259,7 +237,7 @@ export default function BirdGalleryTab({
                 value={week}
                 onChange={(e) => setWeek(e.target.value)}
                 placeholder="e.g. This week, Last week"
-                className="w-full px-3 py-2 border border-borderLight dark:border-borderDark rounded-lg text-[13px] bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:border-peacock"
+                className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
               />
             </div>
 
@@ -276,9 +254,9 @@ export default function BirdGalleryTab({
 
       {/* Bird Gallery Grid */}
       {birds.length === 0 ? (
-        <div className="text-center py-12 px-6 text-neutral-500 dark:text-neutral-400">
+        <div className="text-center py-12 px-6 text-neutral-500 ">
           <div className="text-4xl mb-3">📷</div>
-          <h3 className="text-[17px] font-semibold mb-2 text-neutral-800 dark:text-neutral-200">
+          <h3 className="text-[17px] font-semibold mb-2 text-neutral-800 ">
             No sightings posted yet
           </h3>
           <p className="text-sm">
@@ -303,10 +281,10 @@ export default function BirdGalleryTab({
                   setSelectedBird(b);
                 }
               }}
-              className="bg-white dark:bg-surface-dark rounded-club overflow-hidden border border-borderLight dark:border-borderDark transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-peacock focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950 cursor-pointer flex flex-col justify-between"
+              className="bg-white  rounded-club overflow-hidden border border-borderLight  transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-peacock focus-visible:ring-offset-2  cursor-pointer flex flex-col justify-between"
             >
               {/* <div> */}
-                <div className="w-full h-[180px] bg-gradient-to-br from-[#e8f5e9] to-[#e3f2fd] dark:from-[#0d2318] dark:to-[#0a1e34] flex items-center justify-center relative overflow-hidden">
+                <div className="w-full h-[180px] bg-gradient-to-br from-[#e8f5e9] to-[#e3f2fd]   flex items-center justify-center relative overflow-hidden">
                   {b.photo ? (
                     <Image
                       src={b.photo}
@@ -335,20 +313,20 @@ export default function BirdGalleryTab({
                 </div>
 
                 <div className="p-3.5">
-                  <div className="font-serif text-[15px] font-bold text-neutral-900 dark:text-neutral-50 mb-0.5">
+                  <div className="font-serif text-[15px] font-bold text-neutral-900  mb-0.5">
                     {b.name}
                   </div>
-                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 italic mb-2">
+                  <div className="text-[11px] text-neutral-500  italic mb-2">
                     {b.latin || ''}
                   </div>
                 </div>
               {/* </div> */}
 
               <div className="px-3.5 pb-3.5 flex flex-col items-center justify-between text-[11px]">
-                <span className="text-jade dark:text-emerald-400 bg-jade-light dark:bg-jade-darkLight px-2 py-0.5 rounded-full font-medium">
+                <span className="text-jade  bg-jade-light  px-2 py-0.5 rounded-full font-medium">
                   📍 {b.location}
                 </span>
-                <span className="text-neutral-500 dark:text-neutral-400">
+                <span className="text-neutral-500 ">
                   By {b.spotter}
                 </span>
               </div>
@@ -368,10 +346,10 @@ export default function BirdGalleryTab({
             role="dialog"
             aria-modal="true"
             aria-labelledby="bird-detail-title"
-            className="relative grid w-full max-w-4xl overflow-hidden rounded-club bg-white shadow-2xl dark:bg-surface-dark md:grid-cols-[minmax(0,1.05fr)_minmax(19rem,0.95fr)]"
+            className="relative grid w-full max-w-4xl overflow-hidden rounded-club bg-white shadow-2xl  md:grid-cols-[minmax(0,1.05fr)_minmax(19rem,0.95fr)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="relative min-h-[280px] bg-gradient-to-br from-jade-light to-peacock-light dark:from-jade-darkLight dark:to-peacock-darkLight md:min-h-[520px]">
+            <div className="relative min-h-[280px] bg-gradient-to-br from-jade-light to-peacock-light   md:min-h-[520px]">
               {selectedBird.photo ? (
                 <Image
                   src={getCloudinaryModalUrl(selectedBird.photo)}
@@ -397,35 +375,35 @@ export default function BirdGalleryTab({
                 onClick={() => setSelectedBird(null)}
                 aria-label="Close bird details"
                 title="Close"
-                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-borderLight bg-white text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-borderDark dark:bg-surface-dark dark:text-neutral-300 dark:hover:bg-neutral-800"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-borderLight bg-white text-neutral-600 transition-colors hover:bg-neutral-100    "
               >
                 <X size={18} aria-hidden="true" />
               </button>
 
-              <p className="pr-10 text-[11px] font-bold uppercase tracking-[1.5px] text-peacock dark:text-sky-400">Member sighting</p>
-              <h2 id="bird-detail-title" className="mt-2 font-serif text-3xl font-bold text-jade dark:text-emerald-400">
+              <p className="pr-10 text-[11px] font-bold uppercase tracking-[1.5px] text-peacock ">Member sighting</p>
+              <h2 id="bird-detail-title" className="mt-2 font-serif text-3xl font-bold text-jade ">
                 {selectedBird.name}
               </h2>
               {selectedBird.latin && (
-                <p className="mt-1 text-sm italic text-neutral-500 dark:text-neutral-400">{selectedBird.latin}</p>
+                <p className="mt-1 text-sm italic text-neutral-500 ">{selectedBird.latin}</p>
               )}
 
-              <div className="my-7 space-y-3 border-y border-borderLight py-5 dark:border-borderDark">
-                <div className="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+              <div className="my-7 space-y-3 border-y border-borderLight py-5 ">
+                <div className="flex items-center gap-3 text-sm text-neutral-700 ">
                   <MapPin size={17} className="shrink-0 text-rose" aria-hidden="true" />
                   <span>{selectedBird.location}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                <div className="flex items-center gap-3 text-sm text-neutral-700 ">
                   <UserRound size={17} className="shrink-0 text-peacock" aria-hidden="true" />
                   <span>Spotted by {selectedBird.spotter}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                <div className="flex items-center gap-3 text-sm text-neutral-700 ">
                   <Calendar size={17} className="shrink-0 text-saffron" aria-hidden="true" />
                   <span>{selectedBird.week}</span>
                 </div>
               </div>
 
-              <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+              <p className="text-sm leading-relaxed text-neutral-600 ">
                 A community sighting shared with the Chandigarh Birding Club gallery.
               </p>
               <button

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/api';
 
 interface PasswordModalProps {
   isOpen: boolean;
@@ -18,6 +20,14 @@ export default function PasswordModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const loginMutation = useMutation({
+    mutationFn: (credentials: { username: string; password: string }) =>
+      apiRequest<{ success: boolean }>('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      }),
+  });
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const modalBoxRef = useRef<HTMLDivElement>(null);
 
@@ -51,25 +61,13 @@ export default function PasswordModal({
     setErrorMsg('');
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (res.ok) {
-        onSuccess();
-        onClose();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setErrorMsg(data.error || 'Incorrect username or password. Please try again.');
-        setIsShaking(true);
-        setPassword('');
-        setTimeout(() => setIsShaking(false), 500);
-      }
-    } catch {
-      setErrorMsg('Connection error. Please try again.');
+      await loginMutation.mutateAsync({ username, password });
+      onSuccess();
+      onClose();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Connection error. Please try again.');
       setIsShaking(true);
+      setPassword('');
       setTimeout(() => setIsShaking(false), 500);
     } finally {
       setIsLoading(false);
@@ -82,10 +80,10 @@ export default function PasswordModal({
     }
   };
 
-  const inputClass = `w-full px-4 py-3 border-2 rounded-[10px] text-[15px] outline-none transition-all bg-cream dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 ${
+  const inputClass = `w-full px-4 py-3 border-2 rounded-[10px] text-[15px] outline-none transition-all bg-cream  text-neutral-900  placeholder:text-neutral-400 ${
     isShaking
       ? 'border-rose animate-shake'
-      : 'border-borderLight dark:border-borderDark focus:border-jade dark:focus:border-emerald-500'
+      : 'border-borderLight focus:border-jade'
   }`;
 
   return (
@@ -98,17 +96,17 @@ export default function PasswordModal({
     >
       <div
         ref={modalBoxRef}
-        className="w-full max-w-[400px] bg-white dark:bg-surface-dark border border-neutral-200 dark:border-borderDark rounded-[18px] p-8 text-center shadow-[0_24px_64px_rgba(0,0,0,0.3)] animate-pop-in text-neutral-900 dark:text-neutral-100"
+        className="w-full max-w-[400px] bg-white  border border-neutral-200  rounded-[18px] p-8 text-center shadow-[0_24px_64px_rgba(0,0,0,0.3)] animate-pop-in text-neutral-900 "
       >
-        <h2 id="modal-title" className="font-serif text-[22px] font-bold mb-1.5 text-neutral-900 dark:text-neutral-50">
+        <h2 id="modal-title" className="font-serif text-[22px] font-bold mb-1.5 text-neutral-900 ">
           Admin Login
         </h2>
-        <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mb-5">
+        <p className="text-[13px] text-neutral-500  mb-5">
           Sign in with your admin username and password to unlock editing tools.
         </p>
 
         <form onSubmit={handleSubmit} className="text-left">
-          <label htmlFor="admin-username" className="mb-1.5 block text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+          <label htmlFor="admin-username" className="mb-1.5 block text-xs font-semibold text-neutral-600 ">
             Username
           </label>
           <input
@@ -123,7 +121,7 @@ export default function PasswordModal({
             className={`${inputClass} mb-3`}
           />
 
-          <label htmlFor="admin-password" className="mb-1.5 block text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+          <label htmlFor="admin-password" className="mb-1.5 block text-xs font-semibold text-neutral-600 ">
             Password
           </label>
           <input
@@ -153,7 +151,7 @@ export default function PasswordModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-3 text-[13px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 underline transition-colors cursor-pointer"
+          className="mt-3 text-[13px] text-neutral-500  hover:text-neutral-700  underline transition-colors cursor-pointer"
         >
           Cancel
         </button>

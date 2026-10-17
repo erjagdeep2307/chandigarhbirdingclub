@@ -14,7 +14,10 @@ export async function DELETE(
 
     const { id } = await params;
     const success = await deleteBirdSighting(id);
-    return NextResponse.json({ success });
+    if (!success) {
+      return NextResponse.json({ error: 'Bird sighting not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting bird sighting:', error);
     return NextResponse.json({ error: 'Failed to delete bird sighting' }, { status: 500 });

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import ThemeToggle from './ThemeToggle';
 import {
   Menu,
   X,
@@ -91,7 +90,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
           <div className="flex items-center gap-3">
             <span className="logo-frame ring-2 ring-amber-400/40 shrink-0 bg-white">
               <Image
-                src="/images/logo.svg"
+                src="/images/logo.png"
                 alt="Chandigarh Birding Club logo"
                 width={54}
                 height={54}
@@ -129,14 +128,10 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 );
               })}
             </nav>
-            <div className="pl-2 border-l border-white/20">
-              <ThemeToggle />
-            </div>
           </div>
 
-          {/* Mobile & Tablet Right Controls: Theme Toggle & Prominent Menu Toggler Button */}
+          {/* Mobile and tablet menu controls */}
           <div className="flex xl:hidden items-center gap-2">
-            <ThemeToggle />
 
             {/* Visual, stunning, and unmistakable Menu Toggler Button */}
             <button
@@ -157,7 +152,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 xl:hidden bg-[#0a2012] dark:bg-[#051109] text-white flex flex-col h-screen w-screen overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 xl:hidden bg-[#0a2012]  text-white flex flex-col h-screen w-screen overflow-y-auto animate-fade-in"
         >
           {/* Top Bar: Only Logo (no helping text) and Close Toggler Button */}
           <div className="w-full px-5 py-4 flex items-center justify-between border-b border-white/15 bg-black/25 shrink-0">
@@ -228,7 +223,6 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
             <span className="text-[11px] text-neutral-300 font-medium">
               Chandigarh Birding Club · 2026
             </span>
-            <ThemeToggle />
           </div>
         </div>
       )}
