@@ -10,9 +10,10 @@ import {
   Users,
   Feather,
   ChevronRight,
+  House,
 } from 'lucide-react';
 
-export type TabType = 'walks' | 'gallery' | 'members' | 'about';
+export type TabType = 'home' | 'walks' | 'gallery' | 'members' | 'about';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -52,6 +53,12 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
     tag: string;
   }[] = [
     {
+      id: 'home',
+      label: 'Home',
+      icon: <House className="w-5 h-5 shrink-0" />,
+      tag: '⌂ Home',
+    },
+    {
       id: 'walks',
       label: 'Nature Walks',
       icon: <Compass className="w-5 h-5 shrink-0" />,
@@ -85,9 +92,9 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-40 bg-gradient-to-br from-[#0d3d1f] via-[#1B7A4A] to-[#0d3d1f] shadow-[0_2px_20px_rgba(0,0,0,0.25)] border-b border-emerald-900/40 w-full">
-        <div className="max-w-[1100px] w-full mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-[1100px] w-full mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-2 lg:gap-3">
           {/* Logo and Club Name */}
-          <div className="flex items-center gap-3">
+          <button type="button" onClick={() => handleSelectTab('home')} aria-label="Go to home" className="flex items-center gap-3 text-left">
             <span className="logo-frame ring-2 ring-amber-400/40 shrink-0 bg-white">
               <Image
                 src="/images/logo.png"
@@ -99,25 +106,25 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
               />
             </span>
             <div className="text-white text-left">
-              <h1 className="font-serif text-lg sm:text-[22px] font-black leading-tight tracking-tight">
+              <h1 className="whitespace-nowrap font-serif text-base md:text-lg xl:text-[22px] font-black leading-tight tracking-tight">
                 Chandigarh Birding Club
               </h1>
-              <p className="hidden sm:block text-[11px] text-hornbill-yellow tracking-[2px] uppercase font-medium mt-0.5">
+              <p className="hidden xl:block text-[11px] text-hornbill-yellow tracking-[2px] uppercase font-medium mt-0.5">
                 Into the wild, together
               </p>
             </div>
-          </div>
+          </button>
 
-          {/* Desktop Navigation (visible on extra large screens 1280px+) */}
-          <div className="hidden xl:flex items-center gap-3">
-            <nav className="flex gap-1">
+          {/* Tablet and desktop navigation */}
+          <div className="hidden md:flex items-center">
+            <nav className="flex gap-0.5 lg:gap-1">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleSelectTab(item.id)}
-                    className={`whitespace-nowrap px-3.5 py-2 rounded-lg text-[13px] font-medium transition-all cursor-pointer ${
+                    className={`whitespace-nowrap px-1.5 py-2 rounded-lg text-[10px] lg:px-2 lg:text-[11px] xl:px-3.5 xl:text-[13px] font-medium transition-all cursor-pointer ${
                       isActive
                         ? 'bg-hornbill-yellow text-hornbill-black font-semibold shadow-sm'
                         : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -130,8 +137,8 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
             </nav>
           </div>
 
-          {/* Mobile and tablet menu controls */}
-          <div className="flex xl:hidden items-center gap-2">
+          {/* Mobile-only menu toggle */}
+          <div className="flex md:hidden items-center gap-2">
 
             {/* Visual, stunning, and unmistakable Menu Toggler Button */}
             <button
@@ -147,12 +154,12 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
         </div>
       </header>
 
-      {/* Full-Height Mobile & Tablet Navigation Menu */}
+      {/* Full-screen mobile navigation menu */}
       {mobileMenuOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 xl:hidden bg-[#0a2012]  text-white flex flex-col h-screen w-screen overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 md:hidden bg-[#0a2012] text-white flex flex-col h-screen w-screen overflow-y-auto animate-fade-in"
         >
           {/* Top Bar: Only Logo (no helping text) and Close Toggler Button */}
           <div className="w-full px-5 py-4 flex items-center justify-between border-b border-white/15 bg-black/25 shrink-0">

@@ -11,7 +11,11 @@ interface HeroSectionProps {
 export default function HeroSection({ onTabChange }: HeroSectionProps) {
   const navigateTo = (tab: TabType) => {
     onTabChange(tab);
-    document.getElementById('club-content')?.scrollIntoView({ behavior: 'smooth' });
+    const content = document.getElementById('club-content');
+    if (!content) return;
+
+    const top = content.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: 'smooth' });
   };
 
   return (

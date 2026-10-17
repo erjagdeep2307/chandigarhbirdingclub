@@ -18,7 +18,7 @@ import { csrfHeaders } from '@/lib/csrf';
 import { apiRequest, queryKeys } from '@/lib/api';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>('walks');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
   const queryClient = useQueryClient();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -26,12 +26,12 @@ export default function Home() {
     queryKey: queryKeys.auth,
     queryFn: () => apiRequest<{ isAdmin: boolean }>('/api/auth/check'),
   });
-  const walksQuery = useQuery({ queryKey: queryKeys.walks, queryFn: () => apiRequest<Walk[]>('/api/walks'), enabled: activeTab === 'walks' });
-  const pastWalksQuery = useQuery({ queryKey: queryKeys.pastWalks, queryFn: () => apiRequest<PastWalk[]>('/api/walks/past'), enabled: activeTab === 'walks' });
+  const walksQuery = useQuery({ queryKey: queryKeys.walks, queryFn: () => apiRequest<Walk[]>('/api/walks'), enabled: activeTab === 'home' || activeTab === 'walks' });
+  const pastWalksQuery = useQuery({ queryKey: queryKeys.pastWalks, queryFn: () => apiRequest<PastWalk[]>('/api/walks/past'), enabled: activeTab === 'home' || activeTab === 'walks' });
   const birdsQuery = useQuery({ queryKey: queryKeys.birds, queryFn: () => apiRequest<BirdSighting[]>('/api/birds'), enabled: activeTab === 'gallery' });
   const membersQuery = useQuery({ queryKey: queryKeys.members, queryFn: () => apiRequest<Member[]>('/api/members'), enabled: activeTab === 'members' });
   const isAdmin = Boolean(authQuery.data?.isAdmin);
-  const activeTabQuery = activeTab === 'walks'
+  const activeTabQuery = activeTab === 'home' || activeTab === 'walks'
     ? walksQuery
     : activeTab === 'gallery'
       ? birdsQuery
@@ -81,7 +81,7 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      <HeroSection onTabChange={setActiveTab} />
+      {activeTab === 'home' && <HeroSection onTabChange={setActiveTab} />}
 
       {/* Hornbill Banner */}
       <HornbillBanner />
@@ -99,7 +99,7 @@ export default function Home() {
             </button>
           </div>
         )}
-        {walksQuery.isSuccess && activeTab === 'walks' && (
+        {walksQuery.isSuccess && (activeTab === 'home' || activeTab === 'walks') && (
           <NatureWalksTab
             walks={walksQuery.data ?? []}
             pastWalks={pastWalksQuery.data ?? []}
