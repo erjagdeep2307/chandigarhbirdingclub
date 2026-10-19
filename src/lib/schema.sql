@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS walks (
   location VARCHAR(255) NOT NULL,
   duration VARCHAR(100) DEFAULT 'TBD',
   description TEXT DEFAULT '',
+  post_url TEXT DEFAULT '',
   upcoming BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -27,9 +28,12 @@ CREATE TABLE IF NOT EXISTS past_walks (
   date VARCHAR(100) NOT NULL,
   participants VARCHAR(100) DEFAULT '—',
   species VARCHAR(100) DEFAULT '—',
-  emoji VARCHAR(10) DEFAULT '🌿',
+  post_url TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT '';
+ALTER TABLE past_walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS birds (
   id BIGSERIAL PRIMARY KEY,

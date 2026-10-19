@@ -31,6 +31,7 @@ export async function ensureTablesExist() {
         location VARCHAR(255) NOT NULL,
         duration VARCHAR(100) DEFAULT 'TBD',
         description TEXT DEFAULT '',
+        post_url TEXT DEFAULT '',
         upcoming BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
@@ -42,10 +43,11 @@ export async function ensureTablesExist() {
         date VARCHAR(100) NOT NULL,
         participants VARCHAR(100) DEFAULT '—',
         species VARCHAR(100) DEFAULT '—',
-        emoji VARCHAR(10) DEFAULT '🌿',
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
+    await sql`ALTER TABLE walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT ''`;
+    await sql`ALTER TABLE past_walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT ''`;
     await sql`
       CREATE TABLE IF NOT EXISTS birds (
         id BIGSERIAL PRIMARY KEY,
@@ -88,14 +90,14 @@ export async function verifyAdminCredentials(username: string, password: string)
 }
 export async function getUpcomingWalks(): Promise<Walk[]> {
   await ensureTablesExist();
-  const rows = await sql`SELECT id, title, datetime, location, duration, description as desc, upcoming, created_at FROM walks WHERE upcoming = TRUE ORDER BY datetime ASC`;
-  return rows.map((r) => ({ id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', upcoming: r.upcoming, created_at: r.created_at }));
+  const rows = await sql`SELECT id, title, datetime, location, duration, description as desc, post_url, upcoming, created_at FROM walks WHERE upcoming = TRUE ORDER BY datetime ASC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at }));
 }
 export async function addWalk(walk: Omit<Walk, 'id' | 'upcoming'>): Promise<Walk> {
   await ensureTablesExist();
-  const rows = await sql`INSERT INTO walks (title, datetime, location, duration, description, upcoming) VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, TRUE) RETURNING id, title, datetime, location, duration, description as desc, upcoming, created_at`;
+  const rows = await sql`INSERT INTO walks (title, datetime, location, duration, description, post_url, upcoming) VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, ${walk.post_url || ''}, TRUE) RETURNING id, title, datetime, location, duration, description as desc, post_url, upcoming, created_at`;
   const r = rows[0];
-  return { id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', upcoming: r.upcoming, created_at: r.created_at };
+  return { id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at };
 }
 export async function markWalkAsPast(id: string | number): Promise<boolean> {
   await ensureTablesExist();
@@ -104,7 +106,7 @@ export async function markWalkAsPast(id: string | number): Promise<boolean> {
   const walk = rows[0];
   await sql`UPDATE walks SET upcoming = FALSE WHERE id = ${id}`;
   const formattedDate = new Date(walk.datetime).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-  await sql`INSERT INTO past_walks (title, date, participants, species, emoji) VALUES (${walk.title}, ${formattedDate}, '—', '—', '🌿')`;
+  await sql`INSERT INTO past_walks (title, date, participants, species, post_url) VALUES (${walk.title}, ${formattedDate}, ${String.fromCharCode(45)}, ${String.fromCharCode(45)}, ${walk.post_url || null})`;
   return true;
 }
 export async function deleteWalk(id: string | number): Promise<boolean> {
@@ -115,14 +117,14 @@ export async function deleteWalk(id: string | number): Promise<boolean> {
 // ── PAST WALKS CRUD ──
 export async function getPastWalks(): Promise<PastWalk[]> {
   await ensureTablesExist();
-  const rows = await sql`SELECT id, title, date, participants, species, emoji, created_at FROM past_walks ORDER BY id DESC`;
-  return rows.map((r) => ({ id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, emoji: r.emoji, created_at: r.created_at }));
+  const rows = await sql`SELECT id, title, date, participants, species, post_url, created_at FROM past_walks ORDER BY id DESC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, post_url: r.post_url || '', created_at: r.created_at }));
 }
 export async function addPastWalk(walk: Omit<PastWalk, 'id'>): Promise<PastWalk> {
   await ensureTablesExist();
-  const rows = await sql`INSERT INTO past_walks (title, date, participants, species, emoji) VALUES (${walk.title}, ${walk.date}, ${walk.participants || '—'}, ${walk.species || '—'}, ${walk.emoji || '🌿'}) RETURNING id, title, date, participants, species, emoji, created_at`;
+  const rows = await sql`INSERT INTO past_walks (title, date, participants, species, post_url) VALUES (${walk.title}, ${walk.date}, ${walk.participants || String.fromCharCode(45)}, ${walk.species || String.fromCharCode(45)}, ${walk.post_url || null}) RETURNING id, title, date, participants, species, post_url, created_at`;
   const r = rows[0];
-  return { id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, emoji: r.emoji, created_at: r.created_at };
+  return { id: r.id, title: r.title, date: r.date, participants: r.participants, species: r.species, post_url: r.post_url || '', created_at: r.created_at };
 }
 export async function deletePastWalk(id: string | number): Promise<boolean> {
   await ensureTablesExist();

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, datetime, location, duration, desc } = body;
+    const { title, datetime, location, duration, desc, post_url } = body;
 
     if (!title || !datetime || !location) {
       return NextResponse.json({ error: 'Title, Date & Time, and Location are required' }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       location,
       duration: duration || 'TBD',
       desc: desc || '',
+      post_url: post_url || '',
     });
 
     return NextResponse.json(newWalk, { status: 201 });

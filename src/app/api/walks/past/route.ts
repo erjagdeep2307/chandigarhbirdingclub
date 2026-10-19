@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, date, participants, species, emoji } = body;
+    const { title, date, participants, species, post_url } = body;
 
     if (!title || !date) {
       return NextResponse.json({ error: 'Title and Date are required' }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       date,
       participants: participants || '—',
       species: species || '—',
-      emoji: emoji || '🌿',
+      post_url: post_url || '',
     });
 
     return NextResponse.json(newPastWalk, { status: 201 });

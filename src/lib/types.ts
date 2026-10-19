@@ -5,6 +5,7 @@ export interface Walk {
   location: string;
   duration: string;
   desc: string;
+  post_url?: string;
   upcoming: boolean;
   created_at?: string;
 }
@@ -15,7 +16,7 @@ export interface PastWalk {
   date: string;
   participants: string;
   species: string;
-  emoji: string;
+  post_url?: string;
   created_at?: string;
 }
 

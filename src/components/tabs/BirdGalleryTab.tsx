@@ -24,7 +24,6 @@ export default function BirdGalleryTab({
   const [latin, setLatin] = useState('');
   const [location, setLocation] = useState('');
   const [photo, setPhoto] = useState('');
-  const [emoji, setEmoji] = useState('🐦');
   const [spotter, setSpotter] = useState('');
   const [week, setWeek] = useState('This week');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,10 +76,10 @@ export default function BirdGalleryTab({
         headers: csrfHeaders(),
         body: {
           name: name.trim(), latin: latin.trim(), location: location.trim(), photo: photo.trim(),
-          emoji: emoji.trim() || '🐦', spotter: spotter.trim() || 'Anonymous', week: week.trim() || 'This week',
+          spotter: spotter.trim() || 'Anonymous', week: week.trim() || 'This week',
         },
       });
-      setName(''); setLatin(''); setLocation(''); setPhoto(''); setEmoji('🐦'); setSpotter(''); setWeek('This week');
+      setName(''); setLatin(''); setLocation(''); setPhoto(''); setSpotter(''); setWeek('This week');
       toast.success('Bird sighting added.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to add bird sighting.');
@@ -200,21 +199,7 @@ export default function BirdGalleryTab({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-500  mb-1">
-                  Emoji Icon (if no photo)
-                </label>
-                <input
-                  type="text"
-                  value={emoji}
-                  onChange={(e) => setEmoji(e.target.value)}
-                  maxLength={4}
-                  placeholder="🦅"
-                  className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
-                />
-              </div>
-              <div>
+            <div className="mb-3">
                 <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Spotted By
                 </label>
@@ -225,7 +210,6 @@ export default function BirdGalleryTab({
                   placeholder="Member name"
                   className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
                 />
-              </div>
             </div>
 
             <div className="mb-3">

@@ -7,6 +7,39 @@ import { Walk, PastWalk } from '@/lib/types';
 import { toast } from 'sonner';
 import { csrfHeaders } from '@/lib/csrf';
 
+function walkPostImage(postUrl?: string) {
+  const fallback = '/images/poster1.webp';
+  if (!postUrl) return fallback;
+  try {
+    const url = new URL(postUrl);
+    const host = url.hostname.replace(/^www\./, '');
+    const videoId = host === 'youtu.be'
+      ? url.pathname.slice(1)
+      : ['youtube.com', 'm.youtube.com'].includes(host)
+        ? url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/)?.[1]
+        : null;
+    if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    if (/\.(?:jpe?g|png|webp|gif)(?:$|\?)/i.test(postUrl)) return postUrl;
+  } catch {
+    return fallback;
+  }
+  return fallback;
+}
+
+function WalkPostImage({ postUrl, title }: { postUrl?: string; title: string }) {
+  return (
+    <div className="relative h-52 overflow-hidden bg-jade-light">
+      <img src={walkPostImage(postUrl)} alt={`${title} social post preview`} className="h-full w-full object-fill" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/bg.webp"; }} />
+      <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/45 to-transparent" />
+      {postUrl && (
+        <a href={postUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="absolute bottom-3 right-3 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-jade shadow">
+          View social post ↗
+        </a>
+      )}
+    </div>
+  );
+}
+
 interface NatureWalksTabProps {
   walks: Walk[];
   pastWalks: PastWalk[];
@@ -24,6 +57,7 @@ export default function NatureWalksTab({
   const [walkLocation, setWalkLocation] = useState('');
   const [walkDuration, setWalkDuration] = useState('');
   const [walkDesc, setWalkDesc] = useState('');
+  const [walkPostUrl, setWalkPostUrl] = useState('');
   const [isSubmittingWalk, setIsSubmittingWalk] = useState(false);
 
   // Past walk form state
@@ -31,7 +65,7 @@ export default function NatureWalksTab({
   const [pastDate, setPastDate] = useState('');
   const [pastParticipants, setPastParticipants] = useState('');
   const [pastSpecies, setPastSpecies] = useState('');
-  const [pastEmoji, setPastEmoji] = useState('🌿');
+  const [pastPostUrl, setPastPostUrl] = useState('');
   const [isSubmittingPast, setIsSubmittingPast] = useState(false);
   const [selectedWalk, setSelectedWalk] = useState<Walk | null>(null);
   const [selectedPastWalk, setSelectedPastWalk] = useState<PastWalk | null>(null);
@@ -77,9 +111,9 @@ export default function NatureWalksTab({
     setIsSubmittingWalk(true);
     try {
       await mutation.mutateAsync({ url: '/api/walks', method: 'POST', headers: csrfHeaders(), body: {
-        title: walkTitle.trim(), datetime: walkDatetime, location: walkLocation.trim(), duration: walkDuration.trim() || 'TBD', desc: walkDesc.trim(),
+        title: walkTitle.trim(), datetime: walkDatetime, location: walkLocation.trim(), duration: walkDuration.trim() || 'TBD', desc: walkDesc.trim(), post_url: walkPostUrl.trim(),
       }});
-      setWalkTitle(''); setWalkDatetime(''); setWalkLocation(''); setWalkDuration(''); setWalkDesc('');
+      setWalkTitle(''); setWalkDatetime(''); setWalkLocation(''); setWalkDuration(''); setWalkDesc(''); setWalkPostUrl('');
       toast.success('Walk announcement posted.');
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to post walk announcement.'); }
     finally { setIsSubmittingWalk(false); }
@@ -99,9 +133,9 @@ export default function NatureWalksTab({
     setIsSubmittingPast(true);
     try {
       await mutation.mutateAsync({ url: '/api/walks/past', method: 'POST', headers: csrfHeaders(), body: {
-        title: pastTitle.trim(), date: pastDate.trim(), participants: pastParticipants.trim() || '—', species: pastSpecies.trim() || '—', emoji: pastEmoji.trim() || '🌿',
+        title: pastTitle.trim(), date: pastDate.trim(), participants: pastParticipants.trim() || '-', species: pastSpecies.trim() || '-', post_url: pastPostUrl.trim(),
       }});
-      setPastTitle(''); setPastDate(''); setPastParticipants(''); setPastSpecies(''); setPastEmoji('🌿');
+      setPastTitle(''); setPastDate(''); setPastParticipants(''); setPastSpecies(''); setPastPostUrl('');
       toast.success('Past walk record added.');
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to add past walk record.'); }
     finally { setIsSubmittingPast(false); }
@@ -201,6 +235,10 @@ export default function NatureWalksTab({
               />
             </div>
 
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-neutral-500 mb-1">Social media post URL (optional)</label>
+              <input type="url" value={walkPostUrl} onChange={(e) => setWalkPostUrl(e.target.value)} placeholder="https://www.youtube.com/... or another post link" className="w-full px-3 py-2 border border-borderLight rounded-lg text-[13px] bg-cream text-neutral-900 outline-none focus:border-saffron" />
+            </div>
             <button
               type="submit"
               disabled={isSubmittingWalk}
@@ -236,6 +274,7 @@ export default function NatureWalksTab({
               className="bg-white  rounded-club border-2 border-saffron/90 overflow-hidden shadow-[0_2px_12px_rgba(255,107,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron focus-visible:ring-offset-2  cursor-pointer flex flex-col justify-between"
             >
               <div>
+                <WalkPostImage postUrl={w.post_url} title={w.title} />
                 <div className="bg-gradient-to-r from-saffron to-saffron-mid px-4 py-3.5 flex justify-between items-start gap-3">
                   <span className="bg-white text-saffron text-[10px] font-bold tracking-[1.5px] uppercase px-2 py-0.5 rounded">
                     Upcoming
@@ -248,14 +287,14 @@ export default function NatureWalksTab({
                   <h3 className="font-serif text-[17px] font-bold text-neutral-900  mb-2">
                     {w.title}
                   </h3>
-                  <p className="text-[13px] text-neutral-600  leading-relaxed mb-3">
+                  <p className="text-[13px] text-neutral-600  leading-relaxed mb-2">
                     {w.desc || 'Details to be announced.'}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3.5">
-                    <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 py-1 rounded-full font-medium">
+                    <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 rounded-full font-medium">
                       📍 {w.location}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 py-1 rounded-full font-medium">
+                    <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 rounded-full font-medium">
                       ⏱ {w.duration}
                     </span>
                   </div>
@@ -406,17 +445,15 @@ export default function NatureWalksTab({
               }}
               className="bg-white  rounded-xl border border-borderLight  overflow-hidden transition-all hover:-translate-y-1 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-peacock focus-visible:ring-offset-2  cursor-pointer"
             >
-              <div className="w-full h-[120px] bg-gradient-to-br from-jade-light to-peacock-light   flex items-center justify-center text-5xl">
-                {p.emoji || '🌿'}
-              </div>
+              <WalkPostImage postUrl={p.post_url} title={p.title} />
               <div className="p-3.5">
                 <h4 className="text-sm font-semibold text-neutral-900  mb-1">
                   {p.title}
                 </h4>
                 <div className="text-xs text-neutral-500  flex flex-wrap gap-2.5">
                   <span>📅 {p.date}</span>
-                  {p.participants !== '—' && <span>👥 {p.participants}</span>}
-                  {p.species !== '—' && <span>🐦 {p.species} spp</span>}
+                  {p.participants !== '—' && p.participants !== '-' && <span>👥 {p.participants}</span>}
+                  {p.species !== '—' && p.species !== '-' && <span>{p.species} </span>}
                 </div>
                 {isAdmin && (
                   <button
@@ -487,13 +524,13 @@ export default function NatureWalksTab({
                   <Calendar size={17} className="mt-0.5 shrink-0 text-saffron" aria-hidden="true" />
                   <span>{selectedPastWalk.date}</span>
                 </div>
-                {selectedPastWalk.participants !== '—' && (
+                {selectedPastWalk.participants !== '—' && selectedPastWalk.participants !== '-' && (
                   <div className="flex items-start gap-3 text-sm text-neutral-700 ">
                     <Users size={17} className="mt-0.5 shrink-0 text-peacock" aria-hidden="true" />
                     <span>{selectedPastWalk.participants} participants</span>
                   </div>
                 )}
-                {selectedPastWalk.species !== '—' && (
+                {selectedPastWalk.species !== '—' && selectedPastWalk.species !== '-' && (
                   <div className="flex items-start gap-3 text-sm text-neutral-700 ">
                     <Bird size={17} className="mt-0.5 shrink-0 text-rose" aria-hidden="true" />
                     <span>{selectedPastWalk.species} species recorded</span>
@@ -574,20 +611,10 @@ export default function NatureWalksTab({
               </div>
             </div>
 
-            <div className="mb-3">
-              <label className="block text-xs font-semibold text-neutral-500  mb-1">
-                Emoji
-              </label>
-              <input
-                type="text"
-                value={pastEmoji}
-                onChange={(e) => setPastEmoji(e.target.value)}
-                maxLength={4}
-                placeholder="🌸"
-                className="w-full px-3 py-2 border border-borderLight  rounded-lg text-[13px] bg-cream  text-neutral-900  outline-none focus:border-peacock"
-              />
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-neutral-500 mb-1">Social media post URL (optional)</label>
+              <input type="url" value={pastPostUrl} onChange={(e) => setPastPostUrl(e.target.value)} placeholder="https://www.youtube.com/... or another post link" className="w-full px-3 py-2 border border-borderLight rounded-lg text-[13px] bg-cream text-neutral-900 outline-none focus:border-peacock" />
             </div>
-
             <button
               type="submit"
               disabled={isSubmittingPast}
