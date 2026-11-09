@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, latin, location, photo, spotter, week } = body;
+    const { name, latin, location, photo, emoji, spotter, week } = body;
+    //const { name, latin, location, photo, spotter, week } = body;
 
     if (!name || !location) {
       return NextResponse.json({ error: 'Bird Name and Location are required' }, { status: 400 });
