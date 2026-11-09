@@ -3,6 +3,7 @@ export interface Walk {
   title: string;
   datetime: string;
   location: string;
+  area?: string;
   duration: string;
   desc: string;
   post_url?: string;

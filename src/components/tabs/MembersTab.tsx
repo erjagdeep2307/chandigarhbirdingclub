@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Pencil } from 'lucide-react';
 import { useApiMutation, queryKeys } from '@/lib/api';
 import { Member } from '@/lib/types';
 import { toast } from 'sonner';
@@ -20,6 +21,7 @@ export default function MembersTab({
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [specialty, setSpecialty] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | string | null>(null);
   const mutation = useApiMutation([queryKeys.members]);
 
   // Compute initials helper
@@ -39,13 +41,28 @@ export default function MembersTab({
     if (!name.trim()) { toast.error('Please enter the member name.'); return; }
     setIsSubmitting(true);
     try {
-      await mutation.mutateAsync({ url: '/api/members', method: 'POST', headers: csrfHeaders(), body: {
+      await mutation.mutateAsync({ url: editingMemberId === null ? '/api/members' : `/api/members/${editingMemberId}`, method: editingMemberId === null ? 'POST' : 'PATCH', headers: csrfHeaders(), body: {
         name: name.trim(), role: role.trim() || 'Member', year: parseInt(year, 10) || new Date().getFullYear(), specialty: specialty.trim() || '',
       }});
-      setName(''); setRole(''); setYear(String(new Date().getFullYear())); setSpecialty('');
-      toast.success('Member added.');
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to add member.'); }
+      const wasEditing = editingMemberId !== null;
+      setName(''); setRole(''); setYear(String(new Date().getFullYear())); setSpecialty(''); setEditingMemberId(null);
+      toast.success(wasEditing ? 'Member updated.' : 'Member added.');
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to save member.'); }
     finally { setIsSubmitting(false); }
+  };
+
+  const handleEditMember = (member: Member) => {
+    setEditingMemberId(member.id);
+    setName(member.name);
+    setRole(member.role || 'Member');
+    setYear(String(member.year));
+    setSpecialty(member.specialty || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemberId(null);
+    setName(''); setRole(''); setYear(String(new Date().getFullYear())); setSpecialty('');
   };
 
   const handleDeleteMember = async (id: number | string) => {
@@ -166,6 +183,10 @@ export default function MembersTab({
               className="relative bg-white  rounded-xl border border-borderLight  p-5 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col items-center justify-between"
             >
               {isAdmin && (
+                <>
+                <button type="button" onClick={() => handleEditMember(m)} title="Edit member" aria-label={`Edit ${m.name}`} className="absolute top-2 left-2 text-neutral-400 hover:text-jade hover:bg-jade-light p-1.5 rounded transition-colors cursor-pointer">
+                  <Pencil size={15} aria-hidden="true" />
+                </button>
                 <button
                   onClick={() => handleDeleteMember(m.id)}
                   title="Remove member"
@@ -173,6 +194,7 @@ export default function MembersTab({
                 >
                   ✕
                 </button>
+                </>
               )}
 
               <div>

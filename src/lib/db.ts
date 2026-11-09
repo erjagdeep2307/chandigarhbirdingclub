@@ -29,6 +29,7 @@ export async function ensureTablesExist() {
         title VARCHAR(255) NOT NULL,
         datetime TIMESTAMPTZ NOT NULL,
         location VARCHAR(255) NOT NULL,
+        area TEXT DEFAULT '',
         duration VARCHAR(100) DEFAULT 'TBD',
         description TEXT DEFAULT '',
         post_url TEXT DEFAULT '',
@@ -47,6 +48,7 @@ export async function ensureTablesExist() {
       );
     `;
     await sql`ALTER TABLE walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT ''`;
+    await sql`ALTER TABLE walks ADD COLUMN IF NOT EXISTS area TEXT DEFAULT ''`;
     await sql`ALTER TABLE past_walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT ''`;
     await sql`
       CREATE TABLE IF NOT EXISTS birds (
@@ -90,14 +92,14 @@ export async function verifyAdminCredentials(username: string, password: string)
 }
 export async function getUpcomingWalks(): Promise<Walk[]> {
   await ensureTablesExist();
-  const rows = await sql`SELECT id, title, datetime, location, duration, description as desc, post_url, upcoming, created_at FROM walks WHERE upcoming = TRUE ORDER BY datetime ASC`;
-  return rows.map((r) => ({ id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at }));
+  const rows = await sql`SELECT id, title, datetime, location, area, duration, description as desc, post_url, upcoming, created_at FROM walks WHERE upcoming = TRUE ORDER BY datetime ASC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, area: r.area || '', duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at }));
 }
 export async function addWalk(walk: Omit<Walk, 'id' | 'upcoming'>): Promise<Walk> {
   await ensureTablesExist();
-  const rows = await sql`INSERT INTO walks (title, datetime, location, duration, description, post_url, upcoming) VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, ${walk.post_url || ''}, TRUE) RETURNING id, title, datetime, location, duration, description as desc, post_url, upcoming, created_at`;
+  const rows = await sql`INSERT INTO walks (title, datetime, location, area, duration, description, post_url, upcoming) VALUES (${walk.title}, ${walk.datetime}, ${walk.location}, ${walk.area || ''}, ${walk.duration || 'TBD'}, ${walk.desc || ''}, ${walk.post_url || ''}, TRUE) RETURNING id, title, datetime, location, area, duration, description as desc, post_url, upcoming, created_at`;
   const r = rows[0];
-  return { id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at };
+  return { id: r.id, title: r.title, datetime: new Date(r.datetime).toISOString(), location: r.location, area: r.area || '', duration: r.duration, desc: r.desc || '', post_url: r.post_url || '', upcoming: r.upcoming, created_at: r.created_at };
 }
 export async function markWalkAsPast(id: string | number): Promise<boolean> {
   await ensureTablesExist();
@@ -159,6 +161,13 @@ export async function addMember(member: Omit<Member, 'id'>): Promise<Member> {
   const rows = await sql`INSERT INTO members (name, role, year, specialty, avatar_class) VALUES (${member.name}, ${member.role || 'Member'}, ${member.year || new Date().getFullYear()}, ${member.specialty || ''}, ${member.av || 'av-1'}) RETURNING id, name, role, year, specialty, avatar_class as av, created_at`;
   const r = rows[0];
   return { id: r.id, name: r.name, role: r.role, year: r.year, specialty: r.specialty || '', av: r.av, created_at: r.created_at };
+}
+export async function updateMember(id: string | number, member: Omit<Member, 'id' | 'av'>): Promise<Member | null> {
+  await ensureTablesExist();
+  const rows = await sql`UPDATE members SET name = ${member.name}, role = ${member.role || 'Member'}, year = ${member.year}, specialty = ${member.specialty || ''} WHERE id = ${id} RETURNING id, name, role, year, specialty, avatar_class as av, created_at`;
+  const r = rows[0];
+  if (!r) return null;
+  return { id: r.id, name: r.name, role: r.role, year: r.year, specialty: r.specialty || '', av: r.av || 'av-1', created_at: r.created_at };
 }
 export async function deleteMember(id: string | number): Promise<boolean> {
   await ensureTablesExist();

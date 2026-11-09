@@ -55,6 +55,7 @@ export default function NatureWalksTab({
   const [walkTitle, setWalkTitle] = useState('');
   const [walkDatetime, setWalkDatetime] = useState('');
   const [walkLocation, setWalkLocation] = useState('');
+  const [walkArea, setWalkArea] = useState('');
   const [walkDuration, setWalkDuration] = useState('');
   const [walkDesc, setWalkDesc] = useState('');
   const [walkPostUrl, setWalkPostUrl] = useState('');
@@ -111,9 +112,9 @@ export default function NatureWalksTab({
     setIsSubmittingWalk(true);
     try {
       await mutation.mutateAsync({ url: '/api/walks', method: 'POST', headers: csrfHeaders(), body: {
-        title: walkTitle.trim(), datetime: walkDatetime, location: walkLocation.trim(), duration: walkDuration.trim() || 'TBD', desc: walkDesc.trim(), post_url: walkPostUrl.trim(),
+        title: walkTitle.trim(), datetime: walkDatetime, location: walkLocation.trim(), area: walkArea.trim(), duration: walkDuration.trim() || 'TBD', desc: walkDesc.trim(), post_url: walkPostUrl.trim(),
       }});
-      setWalkTitle(''); setWalkDatetime(''); setWalkLocation(''); setWalkDuration(''); setWalkDesc(''); setWalkPostUrl('');
+      setWalkTitle(''); setWalkDatetime(''); setWalkLocation(''); setWalkArea(''); setWalkDuration(''); setWalkDesc(''); setWalkPostUrl('');
       toast.success('Walk announcement posted.');
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to post walk announcement.'); }
     finally { setIsSubmittingWalk(false); }
@@ -170,6 +171,10 @@ export default function NatureWalksTab({
           </h3>
           <form onSubmit={handleAddWalk}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-500 mb-1">Location</label>
+                <input type="text" value={walkArea} onChange={(e) => setWalkArea(e.target.value)} placeholder="e.g. Sukhna Lake, Chandigarh" className="w-full px-3 py-2 border border-borderLight rounded-lg text-[13px] bg-cream text-neutral-900 outline-none focus:border-saffron" />
+              </div>
               <div>
                 <label className="block text-xs font-semibold text-neutral-500  mb-1">
                   Walk Title
@@ -292,8 +297,9 @@ export default function NatureWalksTab({
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3.5">
                     <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 rounded-full font-medium">
-                      📍 {w.location}
+                      📍 {w.area || w.location}
                     </span>
+                    {w.area && <span className="flex items-center gap-1 text-xs text-jade bg-jade-light px-2.5 rounded-full font-medium">Meeting point: {w.location}</span>}
                     <span className="flex items-center gap-1 text-xs text-jade  bg-jade-light  px-2.5 rounded-full font-medium">
                       ⏱ {w.duration}
                     </span>
@@ -383,7 +389,7 @@ export default function NatureWalksTab({
                 </div>
                 <div className="flex items-start gap-3 text-sm text-neutral-700 ">
                   <MapPin size={17} className="mt-0.5 shrink-0 text-rose" aria-hidden="true" />
-                  <span>{selectedWalk.location}</span>
+                      <span>{selectedWalk.area || selectedWalk.location}{selectedWalk.area && selectedWalk.location ? ` · Meeting point: ${selectedWalk.location}` : ''}</span>
                 </div>
                 <div className="flex items-start gap-3 text-sm text-neutral-700 ">
                   <Clock size={17} className="mt-0.5 shrink-0 text-peacock" aria-hidden="true" />
