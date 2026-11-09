@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       latin: latin || '',
       location,
       photo: photo || '',
+      emoji: emoji || '🐦',
       spotter: spotter || 'Anonymous',
       week: week || 'This week',
     });
