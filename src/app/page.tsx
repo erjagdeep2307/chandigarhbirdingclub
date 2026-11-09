@@ -11,9 +11,10 @@ import NatureWalksTab from '@/components/tabs/NatureWalksTab';
 import BirdGalleryTab from '@/components/tabs/BirdGalleryTab';
 import MembersTab from '@/components/tabs/MembersTab';
 import AboutTab from '@/components/tabs/AboutTab';
+import EventsSection from '@/components/EventsSection';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { Walk, PastWalk, BirdSighting, Member } from '@/lib/types';
+import { Walk, PastWalk, BirdSighting, Member, ClubEvent } from '@/lib/types';
 import { csrfHeaders } from '@/lib/csrf';
 import { apiRequest, queryKeys } from '@/lib/api';
 
@@ -30,9 +31,12 @@ export default function Home() {
   const pastWalksQuery = useQuery({ queryKey: queryKeys.pastWalks, queryFn: () => apiRequest<PastWalk[]>('/api/walks/past'), enabled: activeTab === 'home' || activeTab === 'walks' });
   const birdsQuery = useQuery({ queryKey: queryKeys.birds, queryFn: () => apiRequest<BirdSighting[]>('/api/birds'), enabled: activeTab === 'gallery' });
   const membersQuery = useQuery({ queryKey: queryKeys.members, queryFn: () => apiRequest<Member[]>('/api/members'), enabled: activeTab === 'members' });
+  const eventsQuery = useQuery({ queryKey: queryKeys.events, queryFn: () => apiRequest<ClubEvent[]>('/api/events'), enabled: activeTab === 'home' || activeTab === 'events' });
   const isAdmin = Boolean(authQuery.data?.isAdmin);
   const activeTabQuery = activeTab === 'home' || activeTab === 'walks'
     ? walksQuery
+    : activeTab === 'events'
+      ? eventsQuery
     : activeTab === 'gallery'
       ? birdsQuery
       : activeTab === 'members'
@@ -41,7 +45,8 @@ export default function Home() {
 
   const refreshData = () => queryClient.invalidateQueries({ queryKey: ['walks'] })
     .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.birds }))
-    .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.members }));
+    .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.members }))
+    .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.events }));
 
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest<{ success: boolean }>('/api/auth/logout', { method: 'POST', headers: csrfHeaders() }),
@@ -82,6 +87,7 @@ export default function Home() {
       />
 
       {activeTab === 'home' && <HeroSection onTabChange={setActiveTab} />}
+      {activeTab === 'home' && eventsQuery.isSuccess && <EventsSection events={eventsQuery.data ?? []} isAdmin={isAdmin} />}
 
       {/* Hornbill Banner */}
       <HornbillBanner />
@@ -106,6 +112,7 @@ export default function Home() {
             isAdmin={isAdmin}
           />
         )}
+        {eventsQuery.isSuccess && activeTab === 'events' && <EventsSection events={eventsQuery.data ?? []} isAdmin={isAdmin} manage />}
         {birdsQuery.isSuccess && activeTab === 'gallery' && (
           <BirdGalleryTab
             birds={birdsQuery.data ?? []}

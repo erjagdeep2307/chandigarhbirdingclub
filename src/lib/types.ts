@@ -43,6 +43,14 @@ export interface Member {
   created_at?: string;
 }
 
+export interface ClubEvent {
+  id: number | string;
+  title: string;
+  description: string;
+  image_url: string;
+  created_at?: string;
+}
+
 export interface AuthResponse {
   authenticated: boolean;
   error?: string;

@@ -11,9 +11,10 @@ import {
   Feather,
   ChevronRight,
   House,
+  CalendarDays,
 } from 'lucide-react';
 
-export type TabType = 'home' | 'walks' | 'gallery' | 'members' | 'about';
+export type TabType = 'home' | 'events' | 'walks' | 'gallery' | 'members' | 'about';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -57,6 +58,12 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
       label: 'Home',
       icon: <House className="w-5 h-5 shrink-0" />,
       tag: '⌂ Home',
+    },
+    {
+      id: 'events',
+      label: 'Events',
+      icon: <CalendarDays className="w-5 h-5 shrink-0" />,
+      tag: 'Events',
     },
     {
       id: 'walks',

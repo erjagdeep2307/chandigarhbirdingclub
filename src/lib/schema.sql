@@ -37,6 +37,31 @@ ALTER TABLE walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT '';
 ALTER TABLE walks ADD COLUMN IF NOT EXISTS area TEXT DEFAULT '';
 ALTER TABLE past_walks ADD COLUMN IF NOT EXISTS post_url TEXT DEFAULT '';
 
+CREATE TABLE IF NOT EXISTS events (
+  id BIGSERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT '/images/bg.webp',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key VARCHAR(100) PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
+);
+
+WITH seed_guard AS (
+  INSERT INTO app_settings (key, value)
+  VALUES ('events_sample_seeded', 'true')
+  ON CONFLICT (key) DO NOTHING
+  RETURNING key
+)
+INSERT INTO events (title, description, image_url)
+SELECT 'Wetland Watch at Sukhna Lake',
+       'Join us for a morning by the water as we observe winter visitors, share field notes, and learn how healthy wetlands support birdlife.',
+       '/images/bg.webp'
+FROM seed_guard;
+
 CREATE TABLE IF NOT EXISTS birds (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

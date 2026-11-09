@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { Walk, PastWalk, BirdSighting, Member } from './types';
+import { Walk, PastWalk, BirdSighting, Member, ClubEvent } from './types';
 import { verifyPassword } from './auth';
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -74,6 +74,17 @@ export async function ensureTablesExist() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS events (
+        id BIGSERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        image_url TEXT NOT NULL DEFAULT '/images/bg.webp',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+    await sql`CREATE TABLE IF NOT EXISTS app_settings (key VARCHAR(100) PRIMARY KEY, value TEXT NOT NULL DEFAULT '')`;
+    await sql`WITH seed_guard AS (INSERT INTO app_settings (key, value) VALUES ('events_sample_seeded', 'true') ON CONFLICT (key) DO NOTHING RETURNING key) INSERT INTO events (title, description, image_url) SELECT 'Wetland Watch at Sukhna Lake', 'Join us for a morning by the water as we observe winter visitors, share field notes, and learn how healthy wetlands support birdlife.', '/images/bg.webp' FROM seed_guard`;
     tablesInitialized = true;
   } catch (err) {
     console.error('Failed to initialize Neon database tables:', err);
@@ -173,4 +184,30 @@ export async function deleteMember(id: string | number): Promise<boolean> {
   await ensureTablesExist();
   const deleted = await sql`DELETE FROM members WHERE id = ${id} RETURNING id`;
   return deleted.length > 0;
+}
+
+export async function getEvents(): Promise<ClubEvent[]> {
+  await ensureTablesExist();
+  const rows = await sql`SELECT id, title, description, image_url, created_at FROM events ORDER BY id ASC`;
+  return rows.map((r) => ({ id: r.id, title: r.title, description: r.description || '', image_url: r.image_url, created_at: r.created_at }));
+}
+
+export async function addEvent(event: Omit<ClubEvent, 'id'>): Promise<ClubEvent> {
+  await ensureTablesExist();
+  const rows = await sql`INSERT INTO events (title, description, image_url) VALUES (${event.title}, ${event.description}, ${event.image_url}) RETURNING id, title, description, image_url, created_at`;
+  const r = rows[0];
+  return { id: r.id, title: r.title, description: r.description || '', image_url: r.image_url, created_at: r.created_at };
+}
+
+export async function updateEvent(id: string | number, event: Omit<ClubEvent, 'id' | 'created_at'>): Promise<ClubEvent | null> {
+  await ensureTablesExist();
+  const rows = await sql`UPDATE events SET title = ${event.title}, description = ${event.description}, image_url = ${event.image_url} WHERE id = ${id} RETURNING id, title, description, image_url, created_at`;
+  const r = rows[0];
+  return r ? { id: r.id, title: r.title, description: r.description || '', image_url: r.image_url, created_at: r.created_at } : null;
+}
+
+export async function deleteEvent(id: string | number): Promise<boolean> {
+  await ensureTablesExist();
+  const rows = await sql`DELETE FROM events WHERE id = ${id} RETURNING id`;
+  return rows.length > 0;
 }

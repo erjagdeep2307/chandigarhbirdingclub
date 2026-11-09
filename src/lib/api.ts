@@ -8,6 +8,7 @@ export const queryKeys = {
   pastWalks: ['walks', 'past'] as const,
   birds: ['birds'] as const,
   members: ['members'] as const,
+  events: ['events'] as const,
 };
 
 export async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
@@ -40,6 +41,8 @@ export function useApiMutation(invalidatedKeys: readonly (readonly unknown[])[])
       if (method !== 'DELETE') return undefined;
       const key = url.includes('/members/')
         ? queryKeys.members
+        : url.includes('/events/')
+          ? queryKeys.events
         : url.includes('/birds/')
           ? queryKeys.birds
           : url.includes('/walks/past/')
@@ -57,6 +60,8 @@ export function useApiMutation(invalidatedKeys: readonly (readonly unknown[])[])
       if (variables.method === 'POST' && data && typeof data === 'object' && 'id' in data) {
         const key = variables.url === '/api/members'
           ? queryKeys.members
+          : variables.url === '/api/events'
+            ? queryKeys.events
           : variables.url === '/api/birds'
             ? queryKeys.birds
             : variables.url === '/api/walks/past'
