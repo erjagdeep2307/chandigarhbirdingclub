@@ -150,7 +150,6 @@ export default function EventsSection({ events, isAdmin, manage = false }: Event
                   </div>
                   <div className="flex flex-1 items-center p-6 sm:p-9 md:w-1/2 md:p-12">
                     <div className="max-w-xl">
-                      <p className="text-xs font-bold uppercase tracking-[2px] text-saffron">Chandigarh Birding Club</p>
                       <h3 className="mt-3 font-serif text-2xl font-bold leading-tight text-jade sm:text-3xl">{event.title}</h3>
                       <p className="mt-4 text-sm leading-7 text-neutral-700 sm:text-base">{event.description}</p>
                     </div>
